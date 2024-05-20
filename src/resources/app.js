@@ -15,7 +15,7 @@ app.engine('hbs', engine({ extname: '.hbs' }));
 app.set('views', path.join(__dirname, 'views'));
 
 // config public path
-app.use(express.static(path.join(__dirname, 'views/public')));
+app.use(express.static(path.join(__dirname, '../public')));
 
 // Route
 app.get('/', (req, res) => {
