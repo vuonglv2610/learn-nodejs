@@ -1,20 +1,20 @@
 require('dotenv').config();
 const express = require('express');
+const morgan = require('morgan');
+const routes = require('./routers');
 const app = express();
-
+const bodyParser = require('body-parser');
 const port = process.env.PORT;
 
-const testData = {
-  name: 'vuong',
-  old: 12,
-  desc: 'handsome'
-}
+// Logger
+app.use(morgan('combined'));
 
-app.get('/', (req, res) => {
-  res.setHeader('Content-Type', 'application/json');
-  res.send(testData)
-})
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+app.use(express.json());
+
+routes(app);
 
 app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
-})
+  console.log(`Example app listening on port ${port}`);
+});
