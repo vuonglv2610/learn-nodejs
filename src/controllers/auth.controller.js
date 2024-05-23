@@ -9,20 +9,20 @@ module.exports = {
     try {
       const user = await UserModel.findOne({ where: { email } });
       if (!user) {
-        return res.status(400).json({ error: 'Người dùng không tồn tại' });
+        return Response.fail(req, res, 400, 'Người dùng không tồn tại');
       }
 
       const validPassword = await bcrypt.compare(password, user.password);
       if (!validPassword) {
-        return res.status(400).json({ error: 'Mật khẩu không đúng' });
+        return Response.fail(req, res, 400, 'Mật khẩu không đúng');
       }
-      const token = jwt.sign({ userId: user.id }, 'secretkey', {
-        expiresIn: '1h',
+      const token = jwt.sign({ userId: user.id }, process.env.KEY_JWT, {
+        expiresIn: process.env.EXPIRES_TIME_TOKEN,
       });
       Response.success(res, res, { email }, 200, token);
     } catch (error) {
       console.error(error);
-      res.status(500).json({ error: 'Có lỗi xảy ra' });
+      return Response.fail(req, res, 500, 'Errors');
     }
   },
 
@@ -41,8 +41,7 @@ module.exports = {
       if (error.name === 'SequelizeUniqueConstraintError') {
         Response.fail(req, res, 400, 'Email đã tồn tại');
       } else {
-        console.error(error);
-        res.status(500).json({ error: 'Có lỗi xảy ra' });
+        return Response.fail(req, res, 500, 'Errors');
       }
     }
   },

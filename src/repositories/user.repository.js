@@ -1,4 +1,5 @@
 const UserModel = require('../models/user.model');
+const Response = require('../helpers/response');
 
 module.exports = {
   get: async (req, res, result) => {
@@ -35,7 +36,11 @@ module.exports = {
       const product = await UserModel.create(req.body);
       result(product);
     } catch (error) {
-      console.error('Error creating product:', error);
+      if (error.name === 'SequelizeUniqueConstraintError') {
+        Response.fail(req, res, 400, 'Email đã tồn tại');
+      } else {
+        return Response.fail(req, res, 500, 'Errors');
+      }
     }
   },
 
@@ -69,4 +74,5 @@ module.exports = {
     }
   },
 };
+
 

@@ -46,15 +46,9 @@ const User = sequelize.define(
     tableName: 'users',
     timestamps: true, // thêm createdAt và updatedAt
     paranoid: true, //xóa mềm
-    indexes: [
-      {
-        unique: true,
-        fields: ['email'],
-        where: { deletedAt: null },
-      },
-    ],
   }
 );
 
 module.exports = User;
+
 
