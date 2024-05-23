@@ -1,20 +1,29 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('./db');
 
-const Product = sequelize.define(
-  'Product',
+const User = sequelize.define(
+  'User',
   {
     name: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    price: {
-      type: DataTypes.FLOAT,
+    email: {
+      type: DataTypes.TEXT,
       allowNull: false,
+      unique: true,
     },
-    description: {
+    address: {
       type: DataTypes.TEXT,
       allowNull: true,
+    },
+    roleId: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    password: {
+      type: DataTypes.STRING,
+      allowNull: false,
     },
     createdAt: {
       type: DataTypes.DATE,
@@ -28,17 +37,24 @@ const Product = sequelize.define(
       type: DataTypes.DATE,
       allowNull: true,
     },
-    categoryId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
+    avatar: {
+      type: DataTypes.STRING,
+      allowNull: true,
     },
   },
   {
-    tableName: 'products',
+    tableName: 'users',
     timestamps: true, // thêm createdAt và updatedAt
     paranoid: true, //xóa mềm
+    indexes: [
+      {
+        unique: true,
+        fields: ['email'],
+        where: { deletedAt: null },
+      },
+    ],
   }
 );
 
-module.exports = Product;
+module.exports = User;
 
