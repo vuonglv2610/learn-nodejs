@@ -4,13 +4,13 @@ const Response = require('../helpers/response');
 module.exports = {
   get: async (req, res, result) => {
     try {
-      const products = await UserModel.findAll({
+      const users = await UserModel.findAll({
         where: {
           deletedAt: null,
         },
         // todo: add conditions query parameters
       });
-      result(products);
+      result(users);
     } catch (error) {
       console.error('Error executing query:', error);
     }
@@ -18,14 +18,14 @@ module.exports = {
 
   getOne: async (req, res, result) => {
     try {
-      const product = await UserModel.findOne({
+      const user = await UserModel.findOne({
         where: {
           id: req.params.id,
           deletedAt: null,
         },
         // todo: add conditions query parameters
       });
-      result(product);
+      result(user);
     } catch (error) {
       console.error('Error executing query:', error);
     }
@@ -33,8 +33,8 @@ module.exports = {
 
   create: async (req, res, result) => {
     try {
-      const product = await UserModel.create(req.body);
-      result(product);
+      const user = await UserModel.create(req.body);
+      result(user);
     } catch (error) {
       if (error.name === 'SequelizeUniqueConstraintError') {
         Response.fail(req, res, 400, 'Email đã tồn tại');
@@ -53,24 +53,24 @@ module.exports = {
           deletedAt: null,
         },
       });
-      const updatedProduct = await UserModel.findByPk(id);
-      result(updatedProduct);
+      const updatedUser = await UserModel.findByPk(id);
+      result(updatedUser);
     } catch (error) {
-      console.error('Error updating product:', error);
+      console.error('Error updating users:', error);
       throw error;
     }
   },
 
   remove: async (req, res, result) => {
     try {
-      const product = await UserModel.destroy({
+      const user = await UserModel.destroy({
         where: {
           id: req.params.id,
         },
       });
-      result(product);
+      result(user);
     } catch (error) {
-      console.error('Error deleting product:', error);
+      console.error('Error deleting user:', error);
     }
   },
 };
