@@ -19,29 +19,46 @@ module.exports = {
       const token = jwt.sign({ userId: user.id }, process.env.KEY_JWT, {
         expiresIn: process.env.EXPIRES_TIME_TOKEN,
       });
-      Response.success(res, res, { email }, 200, token);
+      Response.success(
+        res,
+        res,
+        { email, userId: user.id, role: user.role },
+        200,
+        token
+      );
     } catch (error) {
       console.error(error);
+      if (error.name === 'SequelizeDatabaseError') {
+        Response.fail(req, res, 400, 'Email đã tồn tại');
+      }
       return Response.fail(req, res, 500, 'Errors');
     }
   },
 
   register: async (req, res) => {
     try {
-      const { name, email, password, roleId } = req.body;
+      const { name, email, password, confirmPassword } = req.body;
+      if (password !== confirmPassword)
+        return Response.fail(
+          req,
+          res,
+          400,
+          'confirm password different password'
+        );
       const hashedPassword = await bcrypt.hash(password, 10);
       const user = await UserModel.create({
         name,
         email,
         password: hashedPassword,
-        roleId,
+        confirmPassword: hashedPassword,
+        roleId: 1,
       });
       Response.success(req, res, user, 200);
     } catch (error) {
       if (error.name === 'SequelizeUniqueConstraintError') {
         Response.fail(req, res, 400, 'Email đã tồn tại');
       } else {
-        return Response.fail(req, res, 500, 'Errors');
+        return Response.fail(req, res, 500, error);
       }
     }
   },

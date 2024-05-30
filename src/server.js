@@ -11,11 +11,11 @@ const port = process.env.PORT;
 app.use(morgan('combined'));
 
 // chỉ nhận request có địa chỉ
-// app.use(
-//   cors({
-//     origin: process.env.HTTP,
-//   })
-// );
+app.use(
+  cors({
+    origin: process.env.HTTP,
+  })
+);
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());

@@ -1,1 +1,2 @@
 migrate db by sequelize-cli
+create file enum

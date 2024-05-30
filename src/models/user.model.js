@@ -25,6 +25,10 @@ const User = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    confirmPassword: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
     createdAt: {
       type: DataTypes.DATE,
       allowNull: true,
@@ -41,10 +45,6 @@ const User = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
-    phone: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
   },
   {
     tableName: 'users',
@@ -54,6 +54,7 @@ const User = sequelize.define(
 );
 
 module.exports = User;
+
 
 
 
