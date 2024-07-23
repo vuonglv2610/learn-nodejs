@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const UserModel = require('../models/user.model');
 const Response = require('../helpers/response');
+const { v4: uuidv4 } = require('uuid');
 
 module.exports = {
   login: async (req, res) => {
@@ -20,7 +21,7 @@ module.exports = {
         expiresIn: process.env.EXPIRES_TIME_TOKEN,
       });
       Response.success(
-        res,
+        req,
         res,
         { email, userId: user.id, role: user.role },
         200,
@@ -29,7 +30,36 @@ module.exports = {
     } catch (error) {
       console.error(error);
       if (error.name === 'SequelizeDatabaseError') {
-        Response.fail(req, res, 400, 'Email đã tồn tại');
+        Response.fail(req, res, 400, 'Email không tồn tại');
+      }
+      return Response.fail(req, res, 500, 'Errors');
+    }
+  },
+
+  loginSuccess: async (req, res) => {
+    const { id } = req.body;
+    console.log('idid', id)
+    try {
+      const user = await UserModel.findOne({ where: { id } });
+      console.log('useruser', user);
+      if (!user) {
+        return Response.fail(req, res, 400, 'Người dùng không tồn tại');
+      }
+
+      const token = jwt.sign({ userId: user.id }, process.env.KEY_JWT, {
+        expiresIn: process.env.EXPIRES_TIME_TOKEN,
+      });
+      Response.success(
+        req,
+        res,
+        { email: user.email, userId: user.id, role: user.role },
+        200,
+        token
+      );
+    } catch (error) {
+      console.error(error);
+      if (error.name === 'SequelizeDatabaseError') {
+        Response.fail(req, res, 400, 'Email không tồn tại');
       }
       return Response.fail(req, res, 500, 'Errors');
     }
@@ -47,6 +77,7 @@ module.exports = {
         );
       const hashedPassword = await bcrypt.hash(password, 10);
       const user = await UserModel.create({
+        id: uuidv4(),
         name,
         email,
         password: hashedPassword,

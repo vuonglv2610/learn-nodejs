@@ -1,2 +1,1 @@
-migrate db by sequelize-cli
-create file enum
+todo: gửi mail thông báo khi đã đăng nhập thành công

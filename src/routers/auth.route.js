@@ -5,11 +5,12 @@ const AuthController = require('../controllers/auth.controller');
 require('../services/passport');
 
 router.post('/login', AuthController.login);
+router.post('/login-success', AuthController.loginSuccess);
 router.post('/register', AuthController.register);
 
 router.get(
   '/auth/google',
-  passport.authenticate('google', { scope: ['profile', 'email'] })
+  passport.authenticate('google', { scope: ['profile', 'email'] ,session: true, prompt: 'select_account'})
 );
 
 router.get(
@@ -24,7 +25,7 @@ router.get(
     })(req, res, next);
   },
   (req, res) => {
-    res.redirect(`${process.env.HTTP}/login?code=${req?.accessToken}`);
+    res.redirect(`${process.env.HTTP}/login?code=${req?.user.id}`);
   }
 );
 

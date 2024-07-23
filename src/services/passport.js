@@ -11,16 +11,24 @@ passport.use(
       callbackURL: '/api/auth/google/callback',
     },
     async (accessToken, refreshToken, profile, cb) => {
+      console.log(profile,{
+        id: profile.id,
+        email: profile.emails[0].value,
+        name: profile.displayName,
+        google_id: accessToken,
+        roleId: '1',
+      },)
       if (profile?.id) {
-        //     UserModel.findOrCreate({
-        //       where: { id: profile.id },
-        //       defaults: {
-        //         id: profile.id,
-        //         email: profile.email[0].value,
-        //         name: profile.displayname,
-        //         roleId: '1',
-        //       },
-        //     });
+            UserModel.findOrCreate({
+              where: { id: profile.id },
+              defaults: {
+                id: profile.id,
+                email: profile.emails[0].value,
+                name: profile.displayName,
+                google_id: accessToken,
+                roleId: '1',
+              },
+            });
       }
       return cb(null, profile, accessToken);
     }
