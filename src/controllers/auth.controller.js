@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const UserModel = require('../models/user.model');
 const Response = require('../helpers/response');
 const { v4: uuidv4 } = require('uuid');
+const { sendEmailService } = require('../services/emailService.js');
 
 module.exports = {
   login: async (req, res) => {
@@ -28,7 +29,6 @@ module.exports = {
         token
       );
     } catch (error) {
-      console.error(error);
       if (error.name === 'SequelizeDatabaseError') {
         Response.fail(req, res, 400, 'Email không tồn tại');
       }
@@ -38,10 +38,8 @@ module.exports = {
 
   loginSuccess: async (req, res) => {
     const { id } = req.body;
-    console.log('idid', id)
     try {
       const user = await UserModel.findOne({ where: { id } });
-      console.log('useruser', user);
       if (!user) {
         return Response.fail(req, res, 400, 'Người dùng không tồn tại');
       }
@@ -57,7 +55,6 @@ module.exports = {
         token
       );
     } catch (error) {
-      console.error(error);
       if (error.name === 'SequelizeDatabaseError') {
         Response.fail(req, res, 400, 'Email không tồn tại');
       }
@@ -84,12 +81,13 @@ module.exports = {
         confirmPassword: hashedPassword,
         roleId: 1,
       });
+      await sendEmailService(email);
       Response.success(req, res, user, 200);
     } catch (error) {
       if (error.name === 'SequelizeUniqueConstraintError') {
         Response.fail(req, res, 400, 'Email đã tồn tại');
       } else {
-        return Response.fail(req, res, 500, error);
+        Response.fail(req, res, 500, error);
       }
     }
   },

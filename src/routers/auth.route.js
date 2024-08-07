@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const passport = require('passport');
 const AuthController = require('../controllers/auth.controller');
+const { sendEmailService } = require('../services/emailService.js');
 require('../services/passport');
 
 router.post('/login', AuthController.login);
@@ -16,10 +17,11 @@ router.get(
 router.get(
   '/auth/google/callback',
   (req, res, next) => {
-    passport.authenticate('google', (err, profile, accessToken) => {
+    passport.authenticate('google', async (err, profile, accessToken) => {
       req.user = profile;
       if (accessToken) {
         req.accessToken = accessToken;
+        await sendEmailService(profile.emails[0].value);
       }
       next();
     })(req, res, next);
