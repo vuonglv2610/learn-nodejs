@@ -1,0 +1,32 @@
+const { DataTypes } = require('sequelize');
+const sequelize = require('./db');
+
+const Category = sequelize.define(
+    'Category',
+    {
+        name: {
+            type: DataTypes.STRING,
+            allowNull: false,
+        },
+        createdAt: {
+            type: DataTypes.DATE,
+            allowNull: true,
+        },
+        updatedAt: {
+            type: DataTypes.DATE,
+            allowNull: true,
+        },
+        deletedAt: {
+            type: DataTypes.DATE,
+            allowNull: true,
+        },
+    },
+    {
+        tableName: 'categories',
+        timestamps: true, // thêm createdAt và updatedAt
+        paranoid: true, //xóa mềm
+    }
+)
+
+module.exports = Category;
+

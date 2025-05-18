@@ -1,9 +1,14 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('./db');
+const { text } = require('body-parser');
 
 const Product = sequelize.define(
   'Product',
   {
+    sku: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
     name: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -11,6 +16,14 @@ const Product = sequelize.define(
     price: {
       type: DataTypes.FLOAT,
       allowNull: false,
+    },
+    img: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    quantity: {
+      type: DataTypes.INTEGER,
+      allowNull: false
     },
     description: {
       type: DataTypes.TEXT,

@@ -4,8 +4,8 @@ const userRoute = require('./user.route');
 const authRoute = require('./auth.route');
 
 const routesArray = [
-  { path: '/api/product', route: productRoute },
-  { path: '/api/category', route: categoryRoute },
+  { path: '/api/products', route: productRoute },
+  { path: '/api/categories', route: categoryRoute },
   { path: '/api/user', route: userRoute },
   { path: '/api', route: authRoute },
 ];
