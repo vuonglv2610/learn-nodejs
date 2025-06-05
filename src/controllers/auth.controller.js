@@ -1,11 +1,44 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const UserModel = require('../models/user.model');
+const CustomerModel = require('../models/customer.model');
 const Response = require('../helpers/response');
 const { v4: uuidv4 } = require('uuid');
 const { sendEmailService } = require('../services/emailService.js');
 
 module.exports = {
+  loginCustomer: async (req, res) => {
+    const { email, password } = req.body;
+    try {
+      const customer = await CustomerModel.findOne({ where: { email } });
+      if (!customer) {
+        return Response.fail(req, res, 400, 'Khách hàng không tồn tại');
+      }
+
+      const validPassword = await bcrypt.compare(password, customer.password);
+      if (!validPassword) {
+        return Response.fail(req, res, 400, 'Mật khẩu không đúng');
+      }
+
+      const token = jwt.sign({ customerId: customer.id }, process.env.KEY_JWT, {
+        expiresIn: process.env.EXPIRES_TIME_TOKEN,
+      });
+
+      Response.success(
+        req,
+        res,
+        { email, customerId: customer.id, type: 'customer' },
+        200,
+        token
+      );
+    } catch (error) {
+      if (error.name === 'SequelizeDatabaseError') {
+        Response.fail(req, res, 400, 'Email không tồn tại');
+      }
+      return Response.fail(req, res, 500, 'Errors');
+    }
+  },
+
   login: async (req, res) => {
     const { email, password } = req.body;
     try {

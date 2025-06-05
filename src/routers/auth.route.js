@@ -8,10 +8,10 @@ require('../services/passport');
 router.post('/login', AuthController.login);
 router.post('/login-success', AuthController.loginSuccess);
 router.post('/register', AuthController.register);
-
+router.post('/customer/login', AuthController.loginCustomer);
 router.get(
   '/auth/google',
-  passport.authenticate('google', { scope: ['profile', 'email'] ,session: true, prompt: 'select_account'})
+  passport.authenticate('google', { scope: ['profile', 'email'], session: true, prompt: 'select_account' })
 );
 
 router.get(

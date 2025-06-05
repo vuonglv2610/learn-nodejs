@@ -1,15 +1,17 @@
-const ProductModel = require('../models/product.model');
+const CustomerModel = require('../models/customer.model');
+const Response = require('../helpers/response');
+
 
 module.exports = {
   get: async (req, res, result) => {
     try {
-      const products = await ProductModel.findAll({
+      const users = await CustomerModel.findAll({
         where: {
           deletedAt: null,
         },
         // todo: add conditions query parameters
       });
-      result(products);
+      result(users);
     } catch (error) {
       console.error('Error executing query:', error);
     }
@@ -17,14 +19,14 @@ module.exports = {
 
   getOne: async (req, res, result) => {
     try {
-      const product = await ProductModel.findOne({
+      const user = await CustomerModel.findOne({
         where: {
           id: req.params.id,
           deletedAt: null,
         },
         // todo: add conditions query parameters
       });
-      result(product);
+      result(user);
     } catch (error) {
       console.error('Error executing query:', error);
     }
@@ -32,40 +34,44 @@ module.exports = {
 
   create: async (req, res, result) => {
     try {
-      const product = await ProductModel.create(req.body);
-      result(product);
+      const user = await CustomerModel.create(req.body);
+      result(user);
     } catch (error) {
-      console.error('Error creating product:', error);
+      if (error.name === 'SequelizeUniqueConstraintError') {
+        Response.fail(req, res, 400, 'Email đã tồn tại');
+      } else {
+        return Response.fail(req, res, 500, 'Errors');
+      }
     }
   },
 
   edit: async (req, res, result) => {
     const id = req.params.id;
     try {
-      await ProductModel.update(req.body, {
+      await Product.update(req.body, {
         where: {
           id,
           deletedAt: null,
         },
       });
-      const updatedProduct = await ProductModel.findByPk(id);
-      result(updatedProduct);
+      const updatedUser = await CustomerModel.findByPk(id);
+      result(updatedUser);
     } catch (error) {
-      console.error('Error updating product:', error);
+      console.error('Error updating users:', error);
       throw error;
     }
   },
 
   remove: async (req, res, result) => {
     try {
-      const product = await ProductModel.destroy({
+      const user = await CustomerModel.destroy({
         where: {
           id: req.params.id,
         },
       });
-      result(product);
+      result(user);
     } catch (error) {
-      console.error('Error deleting product:', error);
+      console.error('Error deleting user:', error);
     }
   },
 };
