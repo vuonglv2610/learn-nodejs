@@ -3,13 +3,13 @@ const CategoryModel = require('../models/category.model');
 module.exports = {
     get: async (req, res, result) => {
         try {
-            const products = await CategoryModel.findAll({
+            const categories = await CategoryModel.findAll({
                 where: {
                     deletedAt: null,
                 },
                 // todo: add conditions query parameters
             });
-            result(products);
+            result(categories);
         } catch (error) {
             console.error('Error executing query:', error);
         }
@@ -17,14 +17,14 @@ module.exports = {
 
     getOne: async (req, res, result) => {
         try {
-            const product = await CategoryModel.findOne({
+            const categories = await CategoryModel.findOne({
                 where: {
                     id: req.params.id,
                     deletedAt: null,
                 },
                 // todo: add conditions query parameters
             });
-            result(product);
+            result(categories);
         } catch (error) {
             console.error('Error executing query:', error);
         }
@@ -32,40 +32,40 @@ module.exports = {
 
     create: async (req, res, result) => {
         try {
-            const product = await CategoryModel.create(req.body);
-            result(product);
+            const categories = await CategoryModel.create(req.body);
+            result(categories);
         } catch (error) {
-            console.error('Error creating product:', error);
+            console.error('Error creating category:', error);
         }
     },
 
     edit: async (req, res, result) => {
         const id = req.params.id;
         try {
-            await Product.update(req.body, {
+            await CategoryModel.update(req.body, {
                 where: {
                     id,
                     deletedAt: null,
                 },
             });
-            const updatedProduct = await CategoryModel.findByPk(id);
-            result(updatedProduct);
+            const categories = await CategoryModel.findByPk(id);
+            result(categories);
         } catch (error) {
-            console.error('Error updating product:', error);
+            console.error('Error updating categories:', error);
             throw error;
         }
     },
 
     remove: async (req, res, result) => {
         try {
-            const product = await CategoryModel.destroy({
+            const categories = await CategoryModel.destroy({
                 where: {
                     id: req.params.id,
                 },
             });
-            result(product);
+            result(categories);
         } catch (error) {
-            console.error('Error deleting product:', error);
+            console.error('Error deleting categories:', error);
         }
     },
 };
