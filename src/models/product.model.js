@@ -1,6 +1,5 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('./db');
-const { text } = require('body-parser');
 
 const Product = sequelize.define(
   'Product',
@@ -20,10 +19,6 @@ const Product = sequelize.define(
     img: {
       type: DataTypes.TEXT,
       allowNull: true,
-    },
-    quantity: {
-      type: DataTypes.INTEGER,
-      allowNull: false
     },
     description: {
       type: DataTypes.TEXT,
@@ -54,4 +49,3 @@ const Product = sequelize.define(
 );
 
 module.exports = Product;
-
