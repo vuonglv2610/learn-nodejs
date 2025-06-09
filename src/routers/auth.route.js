@@ -18,18 +18,30 @@ router.get(
   '/auth/google/callback',
   (req, res, next) => {
     passport.authenticate('google', async (err, profile, accessToken) => {
+      if (err) {
+        console.error('Google authentication error:', err);
+        return res.redirect(`${process.env.HTTP}/login?error=auth_failed`);
+      }
+      
       req.user = profile;
-      if (accessToken) {
+      if (accessToken && profile?.emails?.[0]?.value) {
         req.accessToken = accessToken;
-        await sendEmailService(profile.emails[0].value);
+        try {
+          await sendEmailService(profile.emails[0].value);
+        } catch (emailError) {
+          console.error('Error sending email:', emailError);
+          // Continue even if email fails
+        }
       }
       next();
     })(req, res, next);
   },
   (req, res) => {
-    res.redirect(`${process.env.HTTP}/login?code=${req?.user.id}`);
+    // Redirect với customerId thay vì Google profile ID
+    res.redirect(`${process.env.HTTP}/login?code=${req?.user?.customerId || req?.user?.id}`);
   }
 );
 
 
 module.exports = router;
+

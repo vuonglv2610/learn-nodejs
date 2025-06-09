@@ -19,17 +19,44 @@ const Customer = sequelize.define(
         },
         phone: {
             type: DataTypes.STRING,
-            allowNull: false,
+            allowNull: true,
         },
         address: {
             type: DataTypes.STRING,
-            allowNull: false,
+            allowNull: true,
         },
         password: {
             type: DataTypes.STRING,
+            allowNull: true,
+        },
+        confirmPassword: {
+            type: DataTypes.STRING,
+            allowNull: true,
+        },
+        google_id: {
+            type: DataTypes.STRING,
+            allowNull: true,
+        },
+        avatar: {
+            type: DataTypes.STRING,
+            allowNull: true,
+        },
+        roleId: {
+            type: DataTypes.STRING,
             allowNull: false,
         },
-        // Thêm các trường khác nếu cần
+        createdAt: {
+            type: DataTypes.DATE,
+            allowNull: true,
+        },
+        updatedAt: {
+            type: DataTypes.DATE,
+            allowNull: true,
+        },
+        deletedAt: {
+            type: DataTypes.DATE,
+            allowNull: true,
+        },
     },
     {
         tableName: 'customers',

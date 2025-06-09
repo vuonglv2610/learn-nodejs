@@ -33,6 +33,10 @@ const User = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
+    avatar: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     createdAt: {
       type: DataTypes.DATE,
       allowNull: true,
@@ -43,10 +47,6 @@ const User = sequelize.define(
     },
     deletedAt: {
       type: DataTypes.DATE,
-      allowNull: true,
-    },
-    avatar: {
-      type: DataTypes.STRING,
       allowNull: true,
     },
   },

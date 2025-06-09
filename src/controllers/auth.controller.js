@@ -72,24 +72,35 @@ module.exports = {
   loginSuccess: async (req, res) => {
     const { id } = req.body;
     try {
-      const user = await UserModel.findOne({ where: { id } });
-      if (!user) {
-        return Response.fail(req, res, 400, 'Người dùng không tồn tại');
+      // Tìm customer thay vì user
+      const customer = await CustomerModel.findOne({ 
+        where: { id },
+        attributes: { exclude: ['password', 'confirmPassword'] }
+      });
+      
+      if (!customer) {
+        return Response.fail(req, res, 400, 'Khách hàng không tồn tại');
       }
 
-      const token = jwt.sign({ userId: user.id }, process.env.KEY_JWT, {
+      // Tạo token với customerId thay vì userId
+      const token = jwt.sign({ customerId: customer.id }, process.env.KEY_JWT, {
         expiresIn: process.env.EXPIRES_TIME_TOKEN,
       });
       Response.success(
         req,
         res,
-        { email: user.email, userId: user.id, role: user.role },
+        { 
+          email: customer.email, 
+          customerId: customer.id, 
+          name: customer.name,
+          type: 'customer'
+        },
         200,
         token
       );
     } catch (error) {
       if (error.name === 'SequelizeDatabaseError') {
-        Response.fail(req, res, 400, 'Email không tồn tại');
+        return Response.fail(req, res, 400, 'Lỗi database');
       }
       return Response.fail(req, res, 500, 'Errors');
     }
@@ -106,7 +117,7 @@ module.exports = {
           'confirm password different password'
         );
       const hashedPassword = await bcrypt.hash(password, 10);
-      const user = await UserModel.create({
+      const user = await CustomerModel.create({
         id: uuidv4(),
         name,
         email,
@@ -125,4 +136,5 @@ module.exports = {
     }
   },
 };
+
 
