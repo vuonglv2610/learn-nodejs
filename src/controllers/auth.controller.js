@@ -7,63 +7,62 @@ const { v4: uuidv4 } = require('uuid');
 const { sendEmailService } = require('../services/emailService.js');
 
 module.exports = {
-  loginCustomer: async (req, res) => {
-    const { email, password } = req.body;
-    try {
-      const customer = await CustomerModel.findOne({ where: { email } });
-      if (!customer) {
-        return Response.fail(req, res, 400, 'Khách hàng không tồn tại');
-      }
-
-      const validPassword = await bcrypt.compare(password, customer.password);
-      if (!validPassword) {
-        return Response.fail(req, res, 400, 'Mật khẩu không đúng');
-      }
-
-      const token = jwt.sign({ customerId: customer.id }, process.env.KEY_JWT, {
-        expiresIn: process.env.EXPIRES_TIME_TOKEN,
-      });
-
-      Response.success(
-        req,
-        res,
-        { email, customerId: customer.id, type: 'customer' },
-        200,
-        token
-      );
-    } catch (error) {
-      if (error.name === 'SequelizeDatabaseError') {
-        Response.fail(req, res, 400, 'Email không tồn tại');
-      }
-      return Response.fail(req, res, 500, 'Errors');
-    }
-  },
-
   login: async (req, res) => {
     const { email, password } = req.body;
     try {
-      const user = await UserModel.findOne({ where: { email } });
-      if (!user) {
-        return Response.fail(req, res, 400, 'Người dùng không tồn tại');
+      let account;
+      let accountType;
+      
+      // Tìm kiếm trong cả hai bảng
+      account = await CustomerModel.findOne({ where: { email } });
+      if (account) {
+        accountType = 'customer';
+      } else {
+        account = await UserModel.findOne({ where: { email } });
+        if (account) {
+          accountType = 'user';
+        } else {
+          return Response.fail(req, res, 400, 'Tài khoản không tồn tại');
+        }
       }
-
-      const validPassword = await bcrypt.compare(password, user.password);
+      
+      // Kiểm tra mật khẩu
+      const validPassword = await bcrypt.compare(password, account.password);
       if (!validPassword) {
         return Response.fail(req, res, 400, 'Mật khẩu không đúng');
       }
-      const token = jwt.sign({ userId: user.id }, process.env.KEY_JWT, {
+
+      // Xác định idField dựa trên accountType
+      const idField = accountType === 'customer' ? 'customerId' : 'userId';
+      
+      // Tạo token
+      const tokenPayload = {};
+      tokenPayload[idField] = account.id;
+      
+      const token = jwt.sign(tokenPayload, process.env.KEY_JWT, {
         expiresIn: process.env.EXPIRES_TIME_TOKEN,
       });
-      Response.success(
-        req,
-        res,
-        { email, userId: user.id, role: user.role },
-        200,
-        token
-      );
+
+      // Chuẩn bị dữ liệu phản hồi
+      const responseData = { 
+        email, 
+        type: accountType,
+        name: account.name
+      };
+      
+      // Thêm ID vào response data
+      responseData[idField] = account.id;
+      
+      // Thêm role cho user
+      if (accountType === 'user') {
+        responseData.role = account.role || account.roleId;
+      }
+
+      Response.success(req, res, responseData, 200, token);
     } catch (error) {
+      console.error('Login error:', error);
       if (error.name === 'SequelizeDatabaseError') {
-        Response.fail(req, res, 400, 'Email không tồn tại');
+        Response.fail(req, res, 400, 'Lỗi database');
       }
       return Response.fail(req, res, 500, 'Errors');
     }
@@ -136,5 +135,8 @@ module.exports = {
     }
   },
 };
+
+
+
 
 
