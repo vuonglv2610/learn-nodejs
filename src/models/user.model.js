@@ -18,7 +18,7 @@ const User = sequelize.define(
       allowNull: true,
     },
     roleId: {
-      type: DataTypes.STRING,
+      type: DataTypes.INTEGER,  // Đảm bảo kiểu dữ liệu này khớp với kiểu dữ liệu của id trong bảng roles
       allowNull: false,
     },
     password: {

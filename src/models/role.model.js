@@ -4,6 +4,11 @@ const sequelize = require('./db');
 const Roles = sequelize.define(
     'Roles',
     {
+        id: {
+            type: DataTypes.INTEGER,
+            primaryKey: true,
+            autoIncrement: true
+        },
         role: {
             type: DataTypes.STRING,
             allowNull: false,
@@ -18,11 +23,11 @@ const Roles = sequelize.define(
         },
         updatedAt: {
             type: DataTypes.DATE,
-            allowNull: false,
+            allowNull: true,
         },
         deletedAt: {
             type: DataTypes.DATE,
-            allowNull: false,
+            allowNull: true,
         },
     },
     {
@@ -30,7 +35,7 @@ const Roles = sequelize.define(
         timestamps: true, // thêm createdAt và updatedAt
         paranoid: true, //xóa mềm
     }
-)
+);
 
 module.exports = Roles;
 

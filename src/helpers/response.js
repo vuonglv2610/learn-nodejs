@@ -5,7 +5,6 @@ module.exports = {
       message: 'Success!',
       result: {
         ...(token && { token: token }),
-        ...(data?.length > 1 && { total: data.length }),
         data: data,
       },
     });

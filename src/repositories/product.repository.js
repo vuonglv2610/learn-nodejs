@@ -1,22 +1,72 @@
 const ProductModel = require('../models/product.model');
 const SerialModel = require('../models/serial.model');
-const { Sequelize } = require('sequelize');
+const CategoryModel = require('../models/category.model');
+const { Op, Sequelize } = require('sequelize');
 
 module.exports = {
   get: async (req, res, result) => {
     try {
-      // Lấy danh sách sản phẩm kèm số lượng serial
-      const products = await ProductModel.findAll({
-        where: {
-          deletedAt: null,
-        },
-        attributes: [
-          'id', 'sku', 'name', 'price', 'img', 'description', 'categoryId', 'createdAt', 'updatedAt'
+      // Xây dựng điều kiện query
+      const whereCondition = {
+        deletedAt: null,
+      };
+      
+      // Tìm kiếm theo tên sản phẩm
+      if (req.query.name) {
+        whereCondition.name = {
+          [Op.like]: `%${req.query.name}%`
+        };
+      }
+      
+      // Tìm kiếm theo SKU
+      if (req.query.sku) {
+        whereCondition.sku = {
+          [Op.like]: `%${req.query.sku}%`
+        };
+      }
+      
+      // Tìm kiếm theo danh mục
+      if (req.query.categoryId) {
+        whereCondition.categoryId = req.query.categoryId;
+      }
+      
+      // Tìm kiếm theo khoảng giá
+      if (req.query.minPrice || req.query.maxPrice) {
+        whereCondition.price = {};
+        
+        if (req.query.minPrice) {
+          whereCondition.price[Op.gte] = parseFloat(req.query.minPrice);
+        }
+        
+        if (req.query.maxPrice) {
+          whereCondition.price[Op.lte] = parseFloat(req.query.maxPrice);
+        }
+      }
+      
+      // Xử lý sắp xếp
+      const order = [];
+      if (req.query.sort_by) {
+        order.push([req.query.sort_by, req.query.sort_order || 'ASC']);
+      } else {
+        order.push(['createdAt', 'DESC']);
+      }
+      
+      // Chuẩn bị options cho query
+      const queryOptions = {
+        where: whereCondition,
+        include: [
+          {
+            model: CategoryModel,
+            as: 'category',
+            attributes: ['id', 'name']
+          }
         ],
-        order: [['id', 'ASC']]
-      });
+        order: order
+      };
+      
+      const products = await ProductModel.findAll(queryOptions);
 
-      // Lấy số lượng serial cho từng sản phẩm
+      // Format dữ liệu trước khi trả về
       const formattedProducts = await Promise.all(products.map(async (product) => {
         const productJson = product.toJSON();
         
@@ -29,9 +79,19 @@ module.exports = {
         });
         
         productJson.quantity = serialCount;
+        
+        // Thêm các trường phẳng từ đối tượng category
+        if (productJson.category) {
+          productJson.categoryName = productJson.category.name;
+          productJson.categoryId = productJson.category.id;
+          // Xóa đối tượng category để tránh lỗi ở frontend
+          delete productJson.category;
+        }
+        
         return productJson;
       }));
 
+      // Trả về tất cả sản phẩm
       result(formattedProducts);
     } catch (error) {
       console.error('Error executing query:', error);
@@ -293,3 +353,6 @@ module.exports = {
     }
   },
 };
+
+
+

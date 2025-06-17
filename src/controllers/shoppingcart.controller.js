@@ -23,9 +23,9 @@ module.exports = {
 
     getOneByCustomerId: (req, res) => {
         ShoppingCartRepository.getOneByCustomerId(req, res, (result) => {
-            if (!result || result.length === 0) {
-                return Response.fail(req, res, 404);
-            }
+            // if (!result || result.length === 0) {
+            //     return Response.fail(req, res, 404);
+            // }
             return Response.success(req, res, result);
         });
     },

@@ -1,6 +1,5 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('./db');
-const Product = require('./product.model');
 
 const ShoppingCart = sequelize.define(
     'ShoppingCart',
@@ -24,8 +23,5 @@ const ShoppingCart = sequelize.define(
         paranoid: true,
     }
 );
-
-// Định nghĩa mối quan hệ
-ShoppingCart.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
 
 module.exports = ShoppingCart;

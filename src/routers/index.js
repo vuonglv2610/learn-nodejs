@@ -7,6 +7,10 @@ const roleRoute = require('./role.route');
 const customerRoute = require('./customer.route');
 const profileRoute = require('./profile.route');
 const serialRoute = require('./serial.route');
+const setupAssociations = require('./../models/associations');
+
+// Thiết lập các mối quan hệ giữa các model
+setupAssociations();
 
 const routesArray = [
   { path: '/api/products', route: productRoute },

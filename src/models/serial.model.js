@@ -1,6 +1,5 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('./db');
-const Product = require('./product.model');
 
 const Serial = sequelize.define(
   'Serial',
@@ -13,10 +12,6 @@ const Serial = sequelize.define(
     productId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: {
-        model: Product,
-        key: 'id'
-      }
     },
     createdAt: {
       type: DataTypes.DATE,
@@ -37,9 +32,5 @@ const Serial = sequelize.define(
     paranoid: true, // xóa mềm (soft delete)
   }
 );
-
-// Thiết lập mối quan hệ với Product
-Serial.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
-Product.hasMany(Serial, { foreignKey: 'productId', as: 'serials' });
 
 module.exports = Serial;

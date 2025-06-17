@@ -1,20 +1,59 @@
 const CustomerModel = require('../models/customer.model');
-const Response = require('../helpers/response');
-const { v4: uuidv4 } = require('uuid');
+const { Op } = require('sequelize');
 const bcrypt = require('bcrypt');
+const { v4: uuidv4 } = require('uuid');
 
 module.exports = {
   get: async (req, res, result) => {
     try {
-      const customers = await CustomerModel.findAll({
-        where: {
-          deletedAt: null,
-        },
-        attributes: { exclude: ['password', 'confirmPassword'] }
-      });
+      // Xây dựng điều kiện query
+      const whereCondition = {
+        deletedAt: null,
+      };
+      
+      // Tìm kiếm theo tên khách hàng
+      if (req.query.name) {
+        whereCondition.name = {
+          [Op.like]: `%${req.query.name}%`
+        };
+      }
+      
+      // Tìm kiếm theo email
+      if (req.query.email) {
+        whereCondition.email = {
+          [Op.like]: `%${req.query.email}%`
+        };
+      }
+      
+      // Tìm kiếm theo địa chỉ
+      if (req.query.address) {
+        whereCondition.address = {
+          [Op.like]: `%${req.query.address}%`
+        };
+      }
+      
+      // Xử lý sắp xếp
+      const order = [];
+      if (req.query.sort_by) {
+        order.push([req.query.sort_by, req.query.sort_order || 'ASC']);
+      } else {
+        order.push(['createdAt', 'DESC']);
+      }
+      
+      // Chuẩn bị options cho query
+      const queryOptions = {
+        where: whereCondition,
+        attributes: { exclude: ['password', 'confirmPassword'] },
+        order: order
+      };
+      
+      const customers = await CustomerModel.findAll(queryOptions);
+      
+      // Trả về tất cả khách hàng
       result(customers);
     } catch (error) {
       console.error('Error executing query:', error);
+      result(null);
     }
   },
 
@@ -100,5 +139,6 @@ module.exports = {
     }
   },
 };
+
 
 

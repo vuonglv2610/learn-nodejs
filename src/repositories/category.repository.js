@@ -1,17 +1,42 @@
 const CategoryModel = require('../models/category.model');
+const { Op } = require('sequelize');
 
 module.exports = {
     get: async (req, res, result) => {
         try {
-            const categories = await CategoryModel.findAll({
-                where: {
-                    deletedAt: null,
-                },
-                // todo: add conditions query parameters
-            });
+            // Xây dựng điều kiện query
+            const whereCondition = {
+                deletedAt: null,
+            };
+            
+            // Tìm kiếm theo tên danh mục
+            if (req.query.name) {
+                whereCondition.name = {
+                    [Op.like]: `%${req.query.name}%`
+                };
+            }
+            
+            // Xử lý sắp xếp
+            const order = [];
+            if (req.query.sort_by) {
+                order.push([req.query.sort_by, req.query.sort_order || 'ASC']);
+            } else {
+                order.push(['createdAt', 'DESC']);
+            }
+            
+            // Chuẩn bị options cho query
+            const queryOptions = {
+                where: whereCondition,
+                order: order
+            };
+            
+            const categories = await CategoryModel.findAll(queryOptions);
+            
+            // Trả về tất cả danh mục
             result(categories);
         } catch (error) {
             console.error('Error executing query:', error);
+            result(null);
         }
     },
 
