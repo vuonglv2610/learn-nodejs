@@ -7,6 +7,7 @@ const roleRoute = require('./role.route');
 const customerRoute = require('./customer.route');
 const profileRoute = require('./profile.route');
 const serialRoute = require('./serial.route');
+const orderRoute = require('./order.route');
 const setupAssociations = require('./../models/associations');
 
 // Thiết lập các mối quan hệ giữa các model
@@ -22,6 +23,7 @@ const routesArray = [
   { path: '/api/roles', route: roleRoute },
   { path: '/api/profile', route: profileRoute },
   { path: '/api/serials', route: serialRoute },
+  { path: '/api/orders', route: orderRoute },
 ];
 
 function routes(app) {

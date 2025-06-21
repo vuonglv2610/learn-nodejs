@@ -5,6 +5,7 @@ const Serial = require('./serial.model');
 const ShoppingCart = require('./shoppingcart.model');
 const User = require('./user.model');
 const Roles = require('./role.model');
+const Order = require('./order.model');
 // Import các model khác nếu cần
 
 // Thiết lập các mối quan hệ
@@ -50,9 +51,22 @@ const setupAssociations = () => {
     as: 'users'
   });
   
+  // Thiết lập quan hệ cho Order
+  Order.belongsTo(User, {
+    foreignKey: 'customer_id',
+    as: 'customer'
+  });
+  
+  // Cập nhật quan hệ cho User
+  User.hasMany(Order, {
+    foreignKey: 'customer_id',
+    as: 'orders'
+  });
+  
   // Thiết lập các quan hệ khác nếu cần
 };
 
 module.exports = setupAssociations;
+
 
 
