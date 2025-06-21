@@ -1,8 +1,12 @@
-const GoogleStrategy = require('passport-google-oauth20').Strategy;
 require('dotenv').config();
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const passport = require('passport');
 const CustomerModel = require('../models/customer.model');
 const sequelize = require('sequelize');
+
+console.log('GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID);
+console.log('GOOGLE_CLIENT_SECRET:', process.env.GOOGLE_CLIENT_SECRET);
+
 
 passport.use(
   new GoogleStrategy(
