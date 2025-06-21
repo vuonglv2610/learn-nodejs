@@ -23,6 +23,14 @@ app.use(express.json());
 
 routes(app);
 
+app.get("*", (req,res)=>{
+  res.send(`
+    <div>
+      <h1>404 Not Found</h1>
+    </div>`
+  )
+})
+
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
