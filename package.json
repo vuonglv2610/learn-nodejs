@@ -1,6 +1,7 @@
 {
+  "name": "learn-nodejs",
   "engines": {
-    "node": "20.x"
+    "node": "22.x"
   },
   "dependencies": {
     "cors": "^2.8.5",
