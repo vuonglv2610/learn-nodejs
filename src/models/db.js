@@ -13,6 +13,7 @@ const sequelize = new Sequelize(
     dialectOptions: {
       connectTimeout: 10000, // tuỳ chọn thêm: tránh lỗi timeout
     },
+    dialectModule: require('mysql2'),
   }
 );
 
