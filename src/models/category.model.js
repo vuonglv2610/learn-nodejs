@@ -5,8 +5,7 @@ const Category = sequelize.define(
   'Category',
   {
     id: {
-      type: DataTypes.INTEGER, // <-- Kiểu dữ liệu phải giống
-      autoIncrement: true,
+      type: DataTypes.STRING, // <-- Kiểu dữ liệu phải giống
       primaryKey: true,
     },
     name: {

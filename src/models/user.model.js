@@ -5,7 +5,7 @@ const User = sequelize.define(
   'User',
   {
     id: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.STRING,
       primaryKey: true,
     },
     name: {
@@ -23,7 +23,7 @@ const User = sequelize.define(
       allowNull: true,
     },
     roleId: {
-      type: DataTypes.INTEGER, // Đảm bảo kiểu dữ liệu này khớp với kiểu dữ liệu của id trong bảng roles
+      type: DataTypes.STRING, // Đảm bảo kiểu dữ liệu này khớp với kiểu dữ liệu của id trong bảng roles
       allowNull: false,
     },
     password: {

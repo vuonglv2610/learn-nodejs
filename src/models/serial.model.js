@@ -4,13 +4,17 @@ const sequelize = require('./db');
 const Serial = sequelize.define(
   'Serial',
   {
+    id: {
+      type: DataTypes.STRING,
+      primaryKey: true,
+    },
     serial: {
       type: DataTypes.STRING,
       allowNull: false,
       unique: true,
     },
     productId: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.STRING,
       allowNull: false,
     },
     createdAt: {

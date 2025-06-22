@@ -5,9 +5,8 @@ const Product = sequelize.define(
   'Product',
   {
     id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.STRING,
       primaryKey: true,
-      autoIncrement: true,
     },
     sku: {
       type: DataTypes.STRING,
@@ -42,7 +41,7 @@ const Product = sequelize.define(
       allowNull: true,
     },
     categoryId: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.STRING,
       allowNull: false,
     },
   },

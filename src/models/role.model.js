@@ -5,9 +5,8 @@ const Roles = sequelize.define(
     'Roles',
     {
         id: {
-            type: DataTypes.INTEGER,
+            type: DataTypes.STRING,
             primaryKey: true,
-            autoIncrement: true
         },
         role: {
             type: DataTypes.STRING,

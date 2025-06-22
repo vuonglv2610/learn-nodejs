@@ -5,9 +5,8 @@ const Order = sequelize.define(
   'Order',
   {
     id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.STRING,
       primaryKey: true,
-      autoIncrement: true
     },
     customer_id: {
       type: DataTypes.STRING,

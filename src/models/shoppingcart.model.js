@@ -4,12 +4,16 @@ const sequelize = require('./db');
 const ShoppingCart = sequelize.define(
     'ShoppingCart',
     {
+        id: {
+            type: DataTypes.STRING,
+            primaryKey: true,
+        },
         customer_id: {
-            type: DataTypes.INTEGER,
+            type: DataTypes.STRING,
             allowNull: false,
         },
         product_id: {
-            type: DataTypes.INTEGER,
+            type: DataTypes.STRING,
             allowNull: false,
         },
         quantity: {
