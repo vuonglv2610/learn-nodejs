@@ -74,6 +74,8 @@ module.exports = {
 
   create: async (req, res, result) => {
     try {
+      const { total } = req.body;
+      req.body.total_amount = total;
       const order = await Order.create(req.body);
       result(order);
     } catch (error) {
