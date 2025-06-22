@@ -5,8 +5,9 @@ const Product = sequelize.define(
   'Product',
   {
     id: {
-      type: DataTypes.STRING,
-      primaryKey: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4, // Sequelize sẽ tự dùng uuid v4
+      primaryKey: true
     },
     sku: {
       type: DataTypes.STRING,
@@ -41,7 +42,8 @@ const Product = sequelize.define(
       allowNull: true,
     },
     categoryId: {
-      type: DataTypes.STRING,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       allowNull: false,
     },
   },

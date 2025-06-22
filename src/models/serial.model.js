@@ -5,8 +5,9 @@ const Serial = sequelize.define(
   'Serial',
   {
     id: {
-      type: DataTypes.STRING,
-      primaryKey: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4, // Sequelize sẽ tự dùng uuid v4
+      primaryKey: true
     },
     serial: {
       type: DataTypes.STRING,
@@ -14,7 +15,8 @@ const Serial = sequelize.define(
       unique: true,
     },
     productId: {
-      type: DataTypes.STRING,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       allowNull: false,
     },
     createdAt: {

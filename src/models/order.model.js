@@ -5,11 +5,13 @@ const Order = sequelize.define(
   'Order',
   {
     id: {
-      type: DataTypes.STRING,
-      primaryKey: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4, // Sequelize sẽ tự dùng uuid v4
+      primaryKey: true
     },
     customer_id: {
-      type: DataTypes.STRING,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       allowNull: false,
     },
     order_date: {

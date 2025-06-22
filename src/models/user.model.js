@@ -5,8 +5,9 @@ const User = sequelize.define(
   'User',
   {
     id: {
-      type: DataTypes.STRING,
-      primaryKey: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4, // Sequelize sẽ tự dùng uuid v4
+      primaryKey: true
     },
     name: {
       type: DataTypes.STRING,
@@ -23,7 +24,8 @@ const User = sequelize.define(
       allowNull: true,
     },
     roleId: {
-      type: DataTypes.STRING, // Đảm bảo kiểu dữ liệu này khớp với kiểu dữ liệu của id trong bảng roles
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       allowNull: false,
     },
     password: {

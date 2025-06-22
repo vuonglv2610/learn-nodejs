@@ -5,8 +5,9 @@ const Category = sequelize.define(
   'Category',
   {
     id: {
-      type: DataTypes.STRING, // <-- Kiểu dữ liệu phải giống
-      primaryKey: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4, // Sequelize sẽ tự dùng uuid v4
+      primaryKey: true
     },
     name: {
       type: DataTypes.STRING,

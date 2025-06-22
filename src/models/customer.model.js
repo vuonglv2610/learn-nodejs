@@ -5,8 +5,9 @@ const Customer = sequelize.define(
   'Customer',
   {
     id: {
-      type: DataTypes.STRING,
-      primaryKey: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4, // Sequelize sẽ tự dùng uuid v4
+      primaryKey: true
     },
     name: {
       type: DataTypes.STRING,
@@ -43,7 +44,8 @@ const Customer = sequelize.define(
       allowNull: true,
     },
     roleId: {
-      type: DataTypes.STRING,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       allowNull: false,
     },
     createdAt: {
