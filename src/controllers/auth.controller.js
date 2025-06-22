@@ -101,7 +101,6 @@ module.exports = {
       if (error.name === 'SequelizeDatabaseError') {
         return Response.fail(req, res, 400, 'Lỗi database');
       }
-      console.error('Login error:', error);
       return Response.fail(req, res, 500, 'Errors');
     }
   },
