@@ -6,6 +6,7 @@ const ShoppingCart = require('./shoppingcart.model');
 const User = require('./user.model');
 const Roles = require('./role.model');
 const Order = require('./order.model');
+const Customer = require('./customer.model');
 // Import các model khác nếu cần
 
 // Thiết lập các mối quan hệ
@@ -52,7 +53,8 @@ const setupAssociations = () => {
   });
   
   // Thiết lập quan hệ cho Order
-  Order.belongsTo(User, {
+  // Order.belongsTo(User, {
+  Order.belongsTo(Customer, {
     foreignKey: 'customer_id',
     as: 'customer'
   });
