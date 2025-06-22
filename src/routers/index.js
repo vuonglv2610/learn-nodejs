@@ -13,7 +13,7 @@ const sequelize = require('./../models/db');
 
 // Thiết lập các mối quan hệ giữa các model
 setupAssociations();
-sequelize.sync({ force: true })
+sequelize.sync({ force: false })
   .then(() => {
     console.log('✅ Các bảng và quan hệ đã được đồng bộ.');
     // Khởi động server hoặc logic tiếp theo
