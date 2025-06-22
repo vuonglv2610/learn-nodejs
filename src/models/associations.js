@@ -54,13 +54,13 @@ const setupAssociations = () => {
 
   // Order liên kết với Customer
   Order.belongsTo(Customer, {
-    foreignKey: 'customer_id',
+    foreignKey: 'customerId',
     as: 'customer'
   });
 
   // Customer có nhiều Order
   Customer.hasMany(Order, {
-    foreignKey: 'customer_id',
+    foreignKey: 'customerId',
     as: 'orders'
   });
 

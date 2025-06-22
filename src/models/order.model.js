@@ -9,7 +9,7 @@ const Order = sequelize.define(
       defaultValue: DataTypes.UUIDV4, // Sequelize sẽ tự dùng uuid v4
       primaryKey: true
     },
-    customer_id: {
+    customerId: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       allowNull: false,
