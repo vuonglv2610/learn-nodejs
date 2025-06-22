@@ -16,55 +16,55 @@ const setupAssociations = () => {
     foreignKey: 'categoryId',
     as: 'category'
   });
-  
+
   // Thiết lập quan hệ cho Product-Serial
   Product.hasMany(Serial, {
     foreignKey: 'productId',
     as: 'serials'
   });
-  
+
   // Thiết lập quan hệ cho Category
   Category.hasMany(Product, {
     foreignKey: 'categoryId',
     as: 'products'
   });
-  
+
   // Thiết lập quan hệ cho Serial
   Serial.belongsTo(Product, {
     foreignKey: 'productId',
     as: 'product'
   });
-  
+
   // Thiết lập quan hệ cho ShoppingCart
   ShoppingCart.belongsTo(Product, {
     foreignKey: 'product_id',
     as: 'product'
   });
-  
+
   // Thiết lập quan hệ cho User và Roles
   User.belongsTo(Roles, {
     foreignKey: 'roleId',
     as: 'role'
   });
-  
+
   Roles.hasMany(User, {
     foreignKey: 'roleId',
     as: 'users'
   });
-  
-  // Thiết lập quan hệ cho Order
-  // Order.belongsTo(User, {
+
+  // Order liên kết với Customer
   Order.belongsTo(Customer, {
     foreignKey: 'customer_id',
     as: 'customer'
   });
-  
-  // Cập nhật quan hệ cho User
-  User.hasMany(Order, {
+
+  // Customer có nhiều Order
+  Customer.hasMany(Order, {
     foreignKey: 'customer_id',
     as: 'orders'
   });
-  
+
+
   // Thiết lập các quan hệ khác nếu cần
 };
 
