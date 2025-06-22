@@ -4,17 +4,13 @@ const passport = require('passport');
 const CustomerModel = require('../models/customer.model');
 const sequelize = require('sequelize');
 
-console.log('GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID);
-console.log('GOOGLE_CLIENT_SECRET:', process.env.GOOGLE_CLIENT_SECRET);
-console.log("all env:", process.env);
-
 
 passport.use(
   new GoogleStrategy(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: '/api/auth/google/callback',
+      callbackURL: process.env.CALLBACK_URL || "/api/auth/google/callback",
     },
     async (accessToken, refreshToken, profile, cb) => {
       try {
