@@ -4,21 +4,26 @@ const sequelize = require('./db');
 const User = sequelize.define(
   'User',
   {
+    id: {
+      type: DataTypes.STRING(255),
+      primaryKey: true,
+    },
     name: {
       type: DataTypes.STRING,
       allowNull: false,
     },
     email: {
-      type: DataTypes.TEXT,
+      type: DataTypes.STRING(255), // hoặc .STRING nếu mặc định là 255
       allowNull: false,
       unique: true,
     },
+
     address: {
       type: DataTypes.TEXT,
       allowNull: true,
     },
     roleId: {
-      type: DataTypes.INTEGER,  // Đảm bảo kiểu dữ liệu này khớp với kiểu dữ liệu của id trong bảng roles
+      type: DataTypes.INTEGER, // Đảm bảo kiểu dữ liệu này khớp với kiểu dữ liệu của id trong bảng roles
       allowNull: false,
     },
     password: {
@@ -29,7 +34,7 @@ const User = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
-    google_id:{
+    google_id: {
       type: DataTypes.STRING,
       allowNull: true,
     },
@@ -58,7 +63,3 @@ const User = sequelize.define(
 );
 
 module.exports = User;
-
-
-
-

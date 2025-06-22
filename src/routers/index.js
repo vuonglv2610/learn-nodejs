@@ -9,9 +9,18 @@ const profileRoute = require('./profile.route');
 const serialRoute = require('./serial.route');
 const orderRoute = require('./order.route');
 const setupAssociations = require('./../models/associations');
+const sequelize = require('./../models/db');
 
 // Thiết lập các mối quan hệ giữa các model
 setupAssociations();
+sequelize.sync({ force: true })
+  .then(() => {
+    console.log('✅ Các bảng và quan hệ đã được đồng bộ.');
+    // Khởi động server hoặc logic tiếp theo
+  })
+  .catch((err) => {
+    console.error('❌ Lỗi khi sync:', err);
+  });
 
 const routesArray = [
   { path: '/api/products', route: productRoute },
