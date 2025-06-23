@@ -13,7 +13,7 @@ app.use(morgan('combined'));
 // chỉ nhận request có địa chỉ
 app.use(
   cors({
-    origin: process.env.HTTP,
+    origin: ['http://localhost:3000', process.env.HTTP].filter(Boolean),
   })
 );
 
