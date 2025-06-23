@@ -222,7 +222,7 @@ module.exports = {
   // Tạo nhiều serial cùng lúc
   bulkCreate: async (req, res, result) => {
     try {
-      const { productId, count, prefix } = req.body;
+      const { productId, serials } = req.body;
       
       // Kiểm tra xem productId có tồn tại không
       const product = await ProductModel.findByPk(productId);
@@ -230,31 +230,43 @@ module.exports = {
         return Response.fail(req, res, 404, 'Sản phẩm không tồn tại');
       }
       
-      // Kiểm tra count
-      if (!count || count <= 0 || count > 1000) {
-        return Response.fail(req, res, 400, 'Số lượng serial phải từ 1 đến 1000');
+      // Kiểm tra mảng serials
+      if (!serials || !Array.isArray(serials) || serials.length === 0) {
+        return Response.fail(req, res, 400, 'Cần cung cấp mảng các mã serial');
       }
       
-      const serialsToCreate = [];
-      const serialPrefix = prefix || product.sku || 'SER';
-      
-      // Tạo danh sách serial
-      for (let i = 0; i < count; i++) {
-        const timestamp = Date.now();
-        const randomStr = Math.random().toString(36).substring(2, 8).toUpperCase();
-        const serial = `${serialPrefix}-${timestamp}-${randomStr}`;
-        
-        serialsToCreate.push({
-          serial,
-          productId
-        });
+      // Kiểm tra số lượng
+      if (serials.length > 1000) {
+        return Response.fail(req, res, 400, 'Số lượng serial không được vượt quá 1000');
       }
+      
+      // Kiểm tra các serial đã tồn tại chưa
+      const existingSerials = await SerialModel.findAll({
+        where: {
+          serial: {
+            [Op.in]: serials
+          }
+        },
+        attributes: ['serial']
+      });
+      
+      if (existingSerials.length > 0) {
+        const duplicates = existingSerials.map(s => s.serial);
+        return Response.fail(req, res, 400, `Các mã serial sau đã tồn tại: ${duplicates.join(', ')}`);
+      }
+      
+      // Tạo danh sách serial để lưu vào database
+      const serialsToCreate = serials.map(serial => ({
+        serial,
+        productId
+      }));
       
       // Tạo nhiều serial cùng lúc
       const createdSerials = await SerialModel.bulkCreate(serialsToCreate);
       result(createdSerials);
     } catch (error) {
       console.error('Error bulk creating serials:', error);
+      return Response.fail(req, res, 500, 'Lỗi khi tạo hàng loạt serial');
     }
   }
 };
