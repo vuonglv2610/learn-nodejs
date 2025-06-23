@@ -8,6 +8,9 @@ const customerRoute = require('./customer.route');
 const profileRoute = require('./profile.route');
 const serialRoute = require('./serial.route');
 const orderRoute = require('./order.route');
+const brandRoute = require('./brand.route');
+const voucherRoute = require('./voucher.route');
+const commentRoute = require('./comment.route');
 const setupAssociations = require('./../models/associations');
 const sequelize = require('./../models/db');
 
@@ -33,6 +36,9 @@ const routesArray = [
   { path: '/api/profile', route: profileRoute },
   { path: '/api/serials', route: serialRoute },
   { path: '/api/orders', route: orderRoute },
+  { path: '/api/brands', route: brandRoute },
+  { path: '/api/vouchers', route: voucherRoute },
+  { path: '/api/comments', route: commentRoute },
 ];
 
 function routes(app) {

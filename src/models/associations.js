@@ -7,7 +7,9 @@ const User = require('./user.model');
 const Roles = require('./role.model');
 const Order = require('./order.model');
 const Customer = require('./customer.model');
-// Import các model khác nếu cần
+const Brand = require('./brand.model');
+const Voucher = require('./voucher.model');
+const Comment = require('./comments.model');
 
 // Thiết lập các mối quan hệ
 const setupAssociations = () => {
@@ -15,6 +17,18 @@ const setupAssociations = () => {
   Product.belongsTo(Category, {
     foreignKey: 'categoryId',
     as: 'category'
+  });
+  
+  // Thêm quan hệ với Brand
+  Product.belongsTo(Brand, {
+    foreignKey: 'brandId',
+    as: 'brand'
+  });
+
+  // Thiết lập quan hệ cho Brand
+  Brand.hasMany(Product, {
+    foreignKey: 'brandId',
+    as: 'products'
   });
 
   // Thiết lập quan hệ cho Product-Serial
@@ -64,6 +78,27 @@ const setupAssociations = () => {
     as: 'orders'
   });
 
+  // Thiết lập quan hệ cho Comment
+  Comment.belongsTo(Customer, {
+    foreignKey: 'customerId',
+    as: 'customer'
+  });
+
+  Comment.belongsTo(Product, {
+    foreignKey: 'productId',
+    as: 'product'
+  });
+
+  // Thiết lập quan hệ ngược lại
+  Customer.hasMany(Comment, {
+    foreignKey: 'customerId',
+    as: 'comments'
+  });
+
+  Product.hasMany(Comment, {
+    foreignKey: 'productId',
+    as: 'comments'
+  });
 
   // Thiết lập các quan hệ khác nếu cần
 };
