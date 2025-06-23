@@ -1,6 +1,6 @@
 const express = require('express');
 const commentController = require('../controllers/comment.controller');
-const { verifyToken } = require('../middlewares/auth');
+const customerAuthMiddleware = require('../middleware/customer-auth.middleware');
 const router = express.Router();
 
 // Lấy tất cả đánh giá
@@ -16,12 +16,12 @@ router.get('/customer/:customerId', commentController.getByCustomer);
 router.get('/:id', commentController.getOne);
 
 // Tạo đánh giá mới (yêu cầu đăng nhập)
-router.post('/', verifyToken, commentController.create);
+router.post('/', customerAuthMiddleware, commentController.create);
 
 // Cập nhật đánh giá (yêu cầu đăng nhập)
-router.put('/:id', verifyToken, commentController.edit);
+router.put('/:id', customerAuthMiddleware, commentController.edit);
 
 // Xóa đánh giá (yêu cầu đăng nhập)
-router.delete('/:id', verifyToken, commentController.remove);
+router.delete('/:id', customerAuthMiddleware, commentController.remove);
 
 module.exports = router;

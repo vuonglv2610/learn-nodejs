@@ -39,6 +39,12 @@ module.exports = {
   },
 
   create: (req, res) => {
+    // Lấy thông tin khách hàng từ token đã được xác thực
+    const customerId = req.customer.id;
+    
+    // Thêm customerId vào body request
+    req.body.customerId = customerId;
+    
     CommentRepository.create(req, res, (result) => {
       if (!result) {
         return Response.fail(req, res);
@@ -48,6 +54,12 @@ module.exports = {
   },
 
   edit: (req, res) => {
+    // Lấy thông tin khách hàng từ token đã được xác thực
+    const customerId = req.customer.id;
+    
+    // Thêm customerId vào request để repository có thể kiểm tra quyền
+    req.customerId = customerId;
+    
     CommentRepository.edit(req, res, (result) => {
       if (!result) {
         return Response.fail(req, res);
@@ -57,6 +69,12 @@ module.exports = {
   },
 
   remove: (req, res) => {
+    // Lấy thông tin khách hàng từ token đã được xác thực
+    const customerId = req.customer.id;
+    
+    // Thêm customerId vào request để repository có thể kiểm tra quyền
+    req.customerId = customerId;
+    
     CommentRepository.remove(req, res, (result) => {
       if (!result) {
         return Response.fail(req, res, 404, 'Đánh giá không tồn tại');

@@ -186,8 +186,8 @@ module.exports = {
         return Response.fail(req, res, 404, 'Đánh giá không tồn tại');
       }
       
-      // Kiểm tra quyền chỉnh sửa (nếu không phải admin)
-      if (req.user && req.user.roleKey !== 'admin' && existingComment.customerId !== req.user.id) {
+      // Kiểm tra quyền chỉnh sửa (chỉ cho phép chủ sở hữu comment)
+      if (existingComment.customerId !== req.customer.id) {
         return Response.fail(req, res, 403, 'Bạn không có quyền chỉnh sửa đánh giá này');
       }
       
@@ -239,8 +239,8 @@ module.exports = {
         return result(null);
       }
       
-      // Kiểm tra quyền xóa (nếu không phải admin)
-      if (req.user && req.user.roleKey !== 'admin' && existingComment.customerId !== req.user.id) {
+      // Kiểm tra quyền xóa (chỉ cho phép chủ sở hữu comment)
+      if (existingComment.customerId !== req.customer.id) {
         return Response.fail(req, res, 403, 'Bạn không có quyền xóa đánh giá này');
       }
       
