@@ -63,8 +63,9 @@ module.exports = {
           },
           {
             model: BrandModel,
-            as: 'category',
-            attributes: ['id', 'name']
+            as: 'brand',
+            attributes: ['id', 'name'],
+            required: false
           }
         ],
         order: order
@@ -92,6 +93,14 @@ module.exports = {
           productJson.categoryId = productJson.category.id;
           // Xóa đối tượng category để tránh lỗi ở frontend
           delete productJson.category;
+        }
+
+        // Thêm các trường phẳng từ đối tượng brand
+        if (productJson.brand) {
+          productJson.brandName = productJson.brand.name;
+          productJson.brandId = productJson.brand.id;
+          // Xóa đối tượng brand để tránh lỗi ở frontend
+          delete productJson.brand;
         }
         
         return productJson;
