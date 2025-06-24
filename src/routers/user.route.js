@@ -9,7 +9,7 @@ router.get('/', UserController.getList);
 
 router.get('/:id', UserController.getOne);
 
-router.post('/', authMiddleware, UserController.create);
+router.post('/', UserController.create);
 
 router.put('/edit/:id', UserController.edit);
 
