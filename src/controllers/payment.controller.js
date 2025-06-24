@@ -150,7 +150,7 @@ module.exports = {
     const redirectUrl = `${process.env.PAYMENT_RETURN_URL}?${queryString}`;
 
     if (SUCCESS_CODES.includes(vnp_ResponseCode)) {
-      return Response.success(req,res,200, 'Thanh toán thành công', {result: `${process.env.PAYMENT_RETURN_URL}?${redirectUrl}` });
+      return Response.success(req,res,200, 'Thanh toán thành công', {});
     } else if (FAILED_INTERNAL_CODES.includes(vnp_ResponseCode)) {
       return Response.fail(req, res, 400, 'Thanh toán thất bại phía vnpay');
     } else if (FAILED_VNPAY_CODES.includes(vnp_ResponseCode)) {

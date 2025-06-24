@@ -8,7 +8,7 @@ const ProductModel = require('../models/product.model');
 const SerialModel = require('../models/serial.model');
 const { Op, Sequelize } = require('sequelize');
 const sequelize = require('../models/db');
-const { VNPay, ignoreLogger, VnpLocale } = require('vnpay');
+const { VNPay, ignoreLogger, VnpLocale, dateFormat } = require('vnpay');
 require('dotenv').config();
 
 module.exports = {
@@ -191,6 +191,27 @@ module.exports = {
         status: 'pending',
         total_amount: finalAmount
       }, { transaction });
+      const vnpay = new VNPay({
+        tmnCode: process.env.VNPAY_TMN_CODE,
+        secureSecret: process.env.VNPAY_SECRET_KEY,
+        vnpayHost: process.env.VNPAY_HOST,
+        testMode: true,
+        loggerFn:ignoreLogger,
+      })
+      const ipAddr = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+
+      const vnpayResponse = await vnpay.buildPaymentUrl({
+        vnp_Amount: finalAmount,
+        vnp_IpAddr: ipAddr,
+        vnp_ReturnUrl: process.env.VNPAY_RETURN_URL,
+        vnp_TxnRef: uuidv4(),// sau thay thành paymentId
+        vnp_OrderInfo: `${uuidv4()}`,
+        vnp_Locale: VnpLocale.VN,
+        vnp_CreateDate: dateFormat(new Date()),
+        vnp_ExpireDate: dateFormat(new Date(Date.now() + 20 * 60 * 1000)), // 20 phút sau khi tạo
+      })
+      console.log("vnpayResponse: ", vnpayResponse)
+      // TODO: sửa để tra về vnpREsponse cho client (link đến trang thanh toán)
       
       // 5. Tạo thanh toán
       const payment = await PaymentModel.create({
@@ -240,27 +261,10 @@ module.exports = {
         ]
       });
 
-      const vnpay = new VNPay({
-        tmnCode: process.env.VNPAY_TMN_CODE,
-        secureSecret: process.env.VNPAY_SECRET_KEY,
-        vnpayHost: process.env.VNPAY_HOST,
-        testMode: true,
-        loggerFn:ignoreLogger,
-      })
-      const ipAddr = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-
-      const vnpayResponse = await vnpay.buildPaymentUrl({
-        vnp_Amount: createdPayment.finalAmount * 100,
-        vnp_IpAddr: ipAddr,
-        vnp_ReturnUrl: process.env.VNPAY_RETURN_URL,
-        vnp_TxnRef: payment.id,
-        vnp_OrderInfo: `${payment.id}`,
-        vnp_Locale: VnpLocale.VN,
-        vnp_CreateDate: new Date().toISOString(),
-        vnp_ExpireDate: new Date(Date.now() + 20 * 60 * 1000).toISOString(), // 20 phút sau khi tạo
-      })
-      console.log("vnpayResponse: ", vnpayResponse)
-      // TODO: sửa để tra về vnpREsponse cho client (link đến trang thanh toán)
+      
+      await transaction.commit();
+      
+      
       result(createdPayment);
     } catch (error) {
       await transaction.rollback();
