@@ -1,0 +1,107 @@
+const { DataTypes } = require('sequelize');
+const sequelize = require('./db');
+
+const Payment = sequelize.define(
+  'Payment',
+  {
+    id: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true
+    },
+    orderId: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+        model: 'orders',
+        key: 'id'
+      }
+    },
+    customerId: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+        model: 'customers',
+        key: 'id'
+      }
+    },
+    amount: {
+      type: DataTypes.FLOAT,
+      allowNull: false,
+      validate: {
+        min: 0
+      }
+    },
+    paymentMethod: {
+      type: DataTypes.ENUM('cash', 'credit_card', 'debit_card', 'bank_transfer', 'e_wallet', 'momo', 'zalopay', 'vnpay'),
+      allowNull: false,
+      defaultValue: 'cash'
+    },
+    paymentStatus: {
+      type: DataTypes.ENUM('pending', 'processing', 'completed', 'failed', 'cancelled', 'refunded'),
+      allowNull: false,
+      defaultValue: 'pending'
+    },
+    transactionId: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      unique: true
+    },
+    paymentDate: {
+      type: DataTypes.DATE,
+      allowNull: true
+    },
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
+    voucherId: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: 'vouchers',
+        key: 'id'
+      }
+    },
+    discountAmount: {
+      type: DataTypes.FLOAT,
+      allowNull: true,
+      defaultValue: 0,
+      validate: {
+        min: 0
+      }
+    },
+    finalAmount: {
+      type: DataTypes.FLOAT,
+      allowNull: false,
+      validate: {
+        min: 0
+      }
+    },
+    paymentGatewayResponse: {
+      type: DataTypes.JSON,
+      allowNull: true
+    }
+  },
+  {
+    tableName: 'payments',
+    timestamps: true,
+    paranoid: true,
+    indexes: [
+      {
+        fields: ['orderId']
+      },
+      {
+        fields: ['customerId']
+      },
+      {
+        fields: ['paymentStatus']
+      },
+      {
+        fields: ['transactionId']
+      }
+    ]
+  }
+);
+
+module.exports = Payment;

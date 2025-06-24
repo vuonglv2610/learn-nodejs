@@ -11,6 +11,7 @@ const orderRoute = require('./order.route');
 const brandRoute = require('./brand.route');
 const voucherRoute = require('./voucher.route');
 const commentRoute = require('./comment.route');
+const paymentRoute = require('./payment.route');
 const setupAssociations = require('./../models/associations');
 const sequelize = require('./../models/db');
 
@@ -39,6 +40,7 @@ const routesArray = [
   { path: '/api/brands', route: brandRoute },
   { path: '/api/vouchers', route: voucherRoute },
   { path: '/api/comments', route: commentRoute },
+  { path: '/api/payments', route: paymentRoute },
 ];
 
 function routes(app) {

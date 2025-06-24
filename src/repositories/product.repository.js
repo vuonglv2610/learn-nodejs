@@ -110,7 +110,7 @@ module.exports = {
           deletedAt: null,
         },
         attributes: [
-          'id', 'sku', 'name', 'price', 'img', 'description', 'categoryId', 'createdAt', 'updatedAt'
+          'id', 'sku', 'name', 'price', 'img', 'description', 'categoryId','brandId', 'createdAt', 'updatedAt'
         ]
       });
 
@@ -153,31 +153,11 @@ module.exports = {
 
   create: async (req, res, result) => {
     try {
-      // Tạo sản phẩm mới (không có quantity)
+      // Tạo sản phẩm mới (loại bỏ quantity khỏi dữ liệu tạo)
       const { quantity, ...productData } = req.body;
       const product = await ProductModel.create(productData);
-      
-      // Nếu có quantity, tạo các serial tương ứng
-      if (quantity && quantity > 0) {
-        const serialsToCreate = [];
-        const serialPrefix = product.sku || 'SER';
-        
-        for (let i = 0; i < quantity; i++) {
-          const timestamp = Date.now();
-          const randomStr = Math.random().toString(36).substring(2, 8).toUpperCase();
-          const serial = `${serialPrefix}-${timestamp}-${randomStr}`;
-          
-          serialsToCreate.push({
-            serial,
-            productId: product.id
-          });
-        }
-        
-        // Tạo nhiều serial cùng lúc
-        await SerialModel.bulkCreate(serialsToCreate);
-      }
-      
-      // Lấy sản phẩm đã tạo kèm số lượng serial
+
+      // Lấy sản phẩm đã tạo kèm số lượng serial (không tạo serial tự động)
       const createdProduct = await ProductModel.findOne({
         where: {
           id: product.id,
@@ -200,7 +180,6 @@ module.exports = {
         ],
         group: ['Product.id']
       });
-      
       if (createdProduct) {
         const productJson = createdProduct.toJSON();
         productJson.quantity = parseInt(productJson.quantity, 10);
@@ -210,6 +189,7 @@ module.exports = {
       }
     } catch (error) {
       console.error('Error creating product:', error);
+      result(null);
     }
   },
 

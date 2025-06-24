@@ -10,6 +10,7 @@ const Customer = require('./customer.model');
 const Brand = require('./brand.model');
 const Voucher = require('./voucher.model');
 const Comment = require('./comments.model');
+const Payment = require('./payment.model');
 
 // Thiết lập các mối quan hệ
 const setupAssociations = () => {
@@ -98,6 +99,38 @@ const setupAssociations = () => {
   Product.hasMany(Comment, {
     foreignKey: 'productId',
     as: 'comments'
+  });
+
+  // Thiết lập quan hệ cho Payment
+  Payment.belongsTo(Order, {
+    foreignKey: 'orderId',
+    as: 'order'
+  });
+
+  Payment.belongsTo(Customer, {
+    foreignKey: 'customerId',
+    as: 'customer'
+  });
+
+  Payment.belongsTo(Voucher, {
+    foreignKey: 'voucherId',
+    as: 'voucher'
+  });
+
+  // Thiết lập quan hệ ngược lại
+  Order.hasMany(Payment, {
+    foreignKey: 'orderId',
+    as: 'payments'
+  });
+
+  Customer.hasMany(Payment, {
+    foreignKey: 'customerId',
+    as: 'payments'
+  });
+
+  Voucher.hasMany(Payment, {
+    foreignKey: 'voucherId',
+    as: 'payments'
   });
 
   // Thiết lập các quan hệ khác nếu cần
