@@ -1,6 +1,7 @@
 const ProductModel = require('../models/product.model');
 const SerialModel = require('../models/serial.model');
 const CategoryModel = require('../models/category.model');
+const BrandModel = require('../models/brand.model');
 const { Op, Sequelize } = require('sequelize');
 
 module.exports = {
@@ -57,6 +58,11 @@ module.exports = {
         include: [
           {
             model: CategoryModel,
+            as: 'category',
+            attributes: ['id', 'name']
+          },
+          {
+            model: BrandModel,
             as: 'category',
             attributes: ['id', 'name']
           }
