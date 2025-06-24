@@ -21,4 +21,7 @@ router.put('/refund/:paymentId', PaymentController.refund);
 // Lấy thống kê thanh toán
 router.get('/statistics/overview', PaymentController.getStatistics);
 
+// check thông tin payment vnpay
+router.get('/check-vnpay', PaymentController.checkVnPay);
+
 module.exports = router;

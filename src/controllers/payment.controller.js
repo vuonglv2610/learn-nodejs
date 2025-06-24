@@ -108,5 +108,55 @@ module.exports = {
       }
       return Response.success(req, res, 200, 'Lấy thống kê thanh toán thành công', data);
     });
-  }
+  },
+
+  // lấy thông tin từ vnpay trả về status, amount ...
+  checkVnPay: (req, res) => {
+    const {
+      vnp_Amount,// chia 100 để lấy ra số đúng
+      vnp_BankCode,
+      vnp_BankTranNo,
+      vnp_CardType,
+      vnp_OrderInfo,
+      vnp_PayDate,
+      vnp_ResponseCode,
+      vnp_TmnCode,
+      vnp_TransactionNo,
+    } = req.query;
+
+    const SUCCESS_CODES = ["00"];
+
+    const FAILED_VNPAY_CODES = [
+      "09", // Chưa đăng ký InternetBanking
+      "10", // Xác thực sai quá 3 lần
+      "11", // Hết hạn chờ thanh toán
+      "12", // Thẻ/Tài khoản bị khóa
+      "13", // Nhập sai OTP
+      "24", // Khách hủy giao dịch
+      "51", // Không đủ số dư
+      "65", // Vượt hạn mức trong ngày
+      "75", // Ngân hàng bảo trì
+      "79", // Nhập sai mật khẩu thanh toán quá số lần
+      "99"  // Lỗi khác
+    ];
+
+    const FAILED_INTERNAL_CODES = [
+      "07" // Trừ tiền thành công nhưng nghi ngờ gian lận
+    ];
+    // Tạo lại query string từ object `req.query`
+    const queryString = new URLSearchParams(req.query).toString();
+
+    // Tạo URL trả về kèm theo query
+    const redirectUrl = `${process.env.PAYMENT_RETURN_URL}?${queryString}`;
+
+    if (SUCCESS_CODES.includes(vnp_ResponseCode)) {
+      return Response.success(req,res,200, 'Thanh toán thành công', {result: `${process.env.PAYMENT_RETURN_URL}?${redirectUrl}` });
+    } else if (FAILED_INTERNAL_CODES.includes(vnp_ResponseCode)) {
+      return Response.fail(req, res, 400, 'Thanh toán thất bại phía vnpay');
+    } else if (FAILED_VNPAY_CODES.includes(vnp_ResponseCode)) {
+      return Response.fail(req, res, 400, 'Thanh toán thất bại');
+    } else {
+      return Response.fail(req, res, 400, 'Thanh toán thất bại');
+    }
+  },
 };
