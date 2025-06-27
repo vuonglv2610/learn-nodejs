@@ -30,6 +30,11 @@ module.exports = {
       if (req.query.categoryId) {
         whereCondition.categoryId = req.query.categoryId;
       }
+
+      // Tìm kiếm theo brand
+      if (req.query.brandId) {
+        whereCondition.brandId = req.query.brandId;
+      }
       
       // Tìm kiếm theo khoảng giá
       if (req.query.minPrice || req.query.maxPrice) {
