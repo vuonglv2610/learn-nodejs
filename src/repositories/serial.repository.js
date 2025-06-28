@@ -129,6 +129,20 @@ module.exports = {
 
   create: async (req, res, result) => {
     try {
+      // Kiểm tra nếu đây là bulk create request (có array serials)
+      if (req.body.serials && Array.isArray(req.body.serials)) {
+        return Response.fail(req, res, 400, 'Để tạo nhiều serial, vui lòng sử dụng endpoint /api/serials/bulk');
+      }
+
+      // Validation dữ liệu đầu vào cho single create
+      if (!req.body.serial) {
+        return Response.fail(req, res, 400, 'Mã serial là bắt buộc');
+      }
+
+      if (!req.body.productId) {
+        return Response.fail(req, res, 400, 'ProductId là bắt buộc');
+      }
+
       // Kiểm tra xem serial đã tồn tại chưa
       const existingSerial = await SerialModel.findOne({
         where: {
@@ -150,6 +164,7 @@ module.exports = {
       result(serial);
     } catch (error) {
       console.error('Error creating serial:', error);
+      return Response.fail(req, res, 500, 'Lỗi khi tạo serial');
     }
   },
 

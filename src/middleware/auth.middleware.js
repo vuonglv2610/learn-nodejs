@@ -3,11 +3,16 @@ const Response = require('../helpers/response');
 const UserModel = require('../models/user.model');
 
 const authMiddleware = async (req, res, next) => {
-  const token = req.header('Authorization').split(' ')[1];
+  const authHeader = req.header('Authorization');
 
-  //   todo: check role
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return Response.fail(req, res, 401, 'Unauthorized - Token required');
+  }
+
+  const token = authHeader.split(' ')[1];
+
   if (!token) {
-    return Response.fail(req, res, 401, 'Unauthorized');
+    return Response.fail(req, res, 401, 'Unauthorized - Invalid token format');
   }
 
   try {
