@@ -1,6 +1,7 @@
 const UserModel = require('../models/user.model');
 const RoleModel = require('../models/role.model');
 const { Op } = require('sequelize');
+const Response = require('../helpers/response');
 
 module.exports = {
   get: async (req, res, result) => {
@@ -119,10 +120,11 @@ module.exports = {
       const user = await UserModel.create(req.body);
       result(user);
     } catch (error) {
+      console.error('Error creating user:', error);
       if (error.name === 'SequelizeUniqueConstraintError') {
-        Response.fail(req, res, 400, 'Email đã tồn tại');
+        return Response.fail(req, res, 400, 'Email đã tồn tại');
       } else {
-        return Response.fail(req, res, 500, 'Errors');
+        return Response.fail(req, res, 500, 'Lỗi khi tạo người dùng');
       }
     }
   },
@@ -130,7 +132,7 @@ module.exports = {
   edit: async (req, res, result) => {
     const id = req.params.id;
     try {
-      await Product.update(req.body, {
+      await UserModel.update(req.body, {
         where: {
           id,
           deletedAt: null,
@@ -140,7 +142,7 @@ module.exports = {
       result(updatedUser);
     } catch (error) {
       console.error('Error updating users:', error);
-      throw error;
+      return Response.fail(req, res, 500, 'Lỗi khi cập nhật người dùng');
     }
   },
 

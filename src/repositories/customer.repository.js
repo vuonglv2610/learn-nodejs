@@ -2,6 +2,7 @@ const CustomerModel = require('../models/customer.model');
 const { Op } = require('sequelize');
 const bcrypt = require('bcrypt');
 const { v4: uuidv4 } = require('uuid');
+const Response = require('../helpers/response');
 
 module.exports = {
   get: async (req, res, result) => {
@@ -76,7 +77,7 @@ module.exports = {
     try {
       const { password, ...customerData } = req.body;
       const hashedPassword = await bcrypt.hash(password, 10);
-      
+
       const customer = await CustomerModel.create({
         id: uuidv4(),
         ...customerData,
@@ -84,15 +85,15 @@ module.exports = {
         confirmPassword: hashedPassword,
         roleId: req.body.roleId || '1', // Default role
       });
-      
+
       const { password: pwd, confirmPassword, ...customerResponse } = customer.toJSON();
       result(customerResponse);
     } catch (error) {
+      console.error('Error creating customer:', error);
       if (error.name === 'SequelizeUniqueConstraintError') {
-        Response.fail(req, res, 400, 'Email đã tồn tại');
+        return Response.fail(req, res, 400, 'Email đã tồn tại');
       } else {
-        console.error('Error creating customer:', error);
-        return Response.fail(req, res, 500, 'Errors');
+        return Response.fail(req, res, 500, 'Lỗi khi tạo khách hàng');
       }
     }
   },
@@ -101,28 +102,28 @@ module.exports = {
     const id = req.params.id;
     try {
       const updateData = { ...req.body };
-      
+
       // Nếu có cập nhật mật khẩu
       if (updateData.password) {
         updateData.password = await bcrypt.hash(updateData.password, 10);
         updateData.confirmPassword = updateData.password;
       }
-      
+
       await CustomerModel.update(updateData, {
         where: {
           id,
           deletedAt: null,
         },
       });
-      
+
       const updatedCustomer = await CustomerModel.findByPk(id, {
         attributes: { exclude: ['password', 'confirmPassword'] }
       });
-      
+
       result(updatedCustomer);
     } catch (error) {
       console.error('Error updating customer:', error);
-      throw error;
+      return Response.fail(req, res, 500, 'Lỗi khi cập nhật khách hàng');
     }
   },
 
@@ -136,6 +137,7 @@ module.exports = {
       result(customer);
     } catch (error) {
       console.error('Error deleting customer:', error);
+      return Response.fail(req, res, 500, 'Lỗi khi xóa khách hàng');
     }
   },
 };

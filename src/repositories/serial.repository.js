@@ -1,6 +1,7 @@
 const SerialModel = require('../models/serial.model');
 const ProductModel = require('../models/product.model');
 const { Op } = require('sequelize');
+const Response = require('../helpers/response');
 
 module.exports = {
   get: async (req, res, result) => {
