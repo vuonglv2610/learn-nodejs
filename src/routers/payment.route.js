@@ -1,16 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const PaymentController = require('../controllers/payment.controller');
-const customerAuthMiddleware = require('../middleware/customer-auth.middleware');
+const { authMiddleware, requireAdmin } = require('../middleware/auth.middleware');
 
-// Lấy danh sách thanh toán (có thể filter theo customerId, orderId, status...)
-router.get('/', PaymentController.getList);
+// Public routes - có thể không cần auth
+router.get('/check-vnpay', PaymentController.checkVnPay); // VNPay callback có thể cần public
 
-// Lấy thông tin thanh toán theo ID
-router.get('/:id', PaymentController.getOne);
-router.post('/create-from-cart', customerAuthMiddleware, PaymentController.createFromCart);
+// Customer routes - cần đăng nhập
+router.post('/create-from-cart', authMiddleware, PaymentController.createFromCart);
+router.get('/:id', authMiddleware, PaymentController.getOne); // Customer xem payment của mình
 
-// check thông tin payment vnpay
-router.get('/check-vnpay', PaymentController.checkVnPay);
+// Admin routes - chỉ admin
+router.get('/', authMiddleware, requireAdmin, PaymentController.getList); // Admin xem tất cả payments
 
 module.exports = router;
