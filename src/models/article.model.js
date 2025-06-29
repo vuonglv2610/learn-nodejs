@@ -24,10 +24,6 @@ const Article = sequelize.define(
     userId: {
       type: DataTypes.UUID,
       allowNull: false,
-      references: {
-        model: 'users',
-        key: 'id'
-      }
     },
     status: {
       type: DataTypes.ENUM('draft', 'published', 'archived'),

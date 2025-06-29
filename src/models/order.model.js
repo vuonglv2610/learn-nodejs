@@ -11,7 +11,6 @@ const Order = sequelize.define(
     },
     customerId: {
       type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
       allowNull: false,
     },
     order_date: {

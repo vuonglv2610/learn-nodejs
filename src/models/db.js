@@ -7,13 +7,17 @@ const sequelize = new Sequelize(
   process.env.DB_PASSWORD,
   {
     host: process.env.DB_HOST,
-    port: process.env.PORT, // <-- BẮT BUỘC PHẢI CÓ
+    port: process.env.DB_PORT || 3306, // MySQL default port
     dialect: process.env.DB_DIALECT || 'mysql',
     logging: false,
     dialectOptions: {
       connectTimeout: 10000, // tuỳ chọn thêm: tránh lỗi timeout
     },
     dialectModule: require('mysql2'),
+    define: {
+      charset: 'utf8mb4',
+      collate: 'utf8mb4_unicode_ci',
+    },
   }
 );
 

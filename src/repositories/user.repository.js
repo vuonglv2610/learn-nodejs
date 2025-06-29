@@ -6,6 +6,10 @@ const Response = require('../helpers/response');
 module.exports = {
   get: async (req, res, result) => {
     try {
+      // Debug associations
+      console.log('🔍 UserModel associations:', Object.keys(UserModel.associations || {}));
+      console.log('🔍 RoleModel associations:', Object.keys(RoleModel.associations || {}));
+
       // Xây dựng điều kiện query
       const whereCondition = {
         deletedAt: null,

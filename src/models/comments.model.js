@@ -19,12 +19,10 @@ const Comment = sequelize.define(
         },
         customerId: {
             type: DataTypes.UUID,
-            defaultValue: DataTypes.UUIDV4,
             allowNull: false,
         },
         productId: {
             type: DataTypes.UUID,
-            defaultValue: DataTypes.UUIDV4,
             allowNull: false,
         },
         isVerifiedPurchase: {

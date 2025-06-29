@@ -45,7 +45,6 @@ const Customer = sequelize.define(
     },
     roleId: {
       type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
       allowNull: false,
     },
     createdAt: {

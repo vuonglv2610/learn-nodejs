@@ -11,12 +11,10 @@ const ShoppingCart = sequelize.define(
         },
         customer_id: {
             type: DataTypes.UUID,
-            defaultValue: DataTypes.UUIDV4,
             allowNull: false,
         },
         product_id: {
             type: DataTypes.UUID,
-            defaultValue: DataTypes.UUIDV4,
             allowNull: false,
         },
         quantity: {

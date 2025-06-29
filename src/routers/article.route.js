@@ -5,7 +5,7 @@ const router = express.Router();
 
 // Public route - đọc bài viết
 router.get('/:id', articleController.getOne);
-router.get('/', requireAdmin, articleController.getList);
+router.get('/', articleController.getList);
 
 // Protected routes - cần auth
 router.post('/', authMiddleware, requireAdmin, articleController.create);

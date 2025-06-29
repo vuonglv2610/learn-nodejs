@@ -31,7 +31,6 @@ const Product = sequelize.define(
     },
     brandId: {
       type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
       allowNull: true,
     },
     createdAt: {
@@ -48,7 +47,6 @@ const Product = sequelize.define(
     },
     categoryId: {
       type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
       allowNull: false,
     },
   },

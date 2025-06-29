@@ -25,7 +25,6 @@ const User = sequelize.define(
     },
     roleId: {
       type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
       allowNull: false,
     },
     password: {
@@ -43,6 +42,11 @@ const User = sequelize.define(
     avatar: {
       type: DataTypes.STRING,
       allowNull: true,
+    },
+    status: {
+      type: DataTypes.ENUM('active', 'locked'),
+      allowNull: false,
+      defaultValue: 'active'
     },
     createdAt: {
       type: DataTypes.DATE,

@@ -12,18 +12,10 @@ const Payment = sequelize.define(
     orderId: {
       type: DataTypes.UUID,
       allowNull: false,
-      references: {
-        model: 'orders',
-        key: 'id'
-      }
     },
     customerId: {
       type: DataTypes.UUID,
       allowNull: false,
-      references: {
-        model: 'customers',
-        key: 'id'
-      }
     },
     amount: {
       type: DataTypes.FLOAT,
@@ -58,10 +50,6 @@ const Payment = sequelize.define(
     voucherId: {
       type: DataTypes.UUID,
       allowNull: true,
-      references: {
-        model: 'vouchers',
-        key: 'id'
-      }
     },
     discountAmount: {
       type: DataTypes.FLOAT,
