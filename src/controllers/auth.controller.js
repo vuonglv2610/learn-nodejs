@@ -9,10 +9,16 @@ const { sendEmailService } = require('../services/emailService.js');
 module.exports = {
   login: async (req, res) => {
     const { email, password } = req.body;
+
+    // Kiểm tra input
+    if (!email || !password) {
+      return Response.fail(req, res, 400, 'Email và mật khẩu là bắt buộc');
+    }
+
     try {
       let account;
       let accountType;
-      
+
       // Tìm kiếm trong cả hai bảng
       account = await CustomerModel.findOne({ where: { email } });
       if (account) {
@@ -25,7 +31,12 @@ module.exports = {
           return Response.fail(req, res, 400, 'Tài khoản không tồn tại');
         }
       }
-      
+
+      // Kiểm tra xem account có password không (có thể đăng ký qua Google)
+      if (!account.password) {
+        return Response.fail(req, res, 400, 'Tài khoản này được tạo qua Google. Vui lòng đăng nhập bằng Google');
+      }
+
       // Kiểm tra mật khẩu
       const validPassword = await bcrypt.compare(password, account.password);
       if (!validPassword) {
@@ -62,9 +73,9 @@ module.exports = {
     } catch (error) {
       console.error('Login error:', error);
       if (error.name === 'SequelizeDatabaseError') {
-        Response.fail(req, res, 400, 'Lỗi database');
+        return Response.fail(req, res, 400, 'Lỗi database');
       }
-      return Response.fail(req, res, 500, 'Errors');
+      return Response.fail(req, res, 500, 'Lỗi đăng nhập');
     }
   },
 
