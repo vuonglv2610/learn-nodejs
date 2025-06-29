@@ -92,7 +92,8 @@ module.exports = {
           email: customer.email, 
           customerId: customer.id, 
           name: customer.name,
-          type: 'customer'
+          type: 'customer',
+          role: customer.role
         },
         200,
         token
@@ -122,7 +123,6 @@ module.exports = {
         email,
         password: hashedPassword,
         confirmPassword: hashedPassword,
-        roleId: 1,
       });
       await sendEmailService(email);
       Response.success(req, res, user, 200);

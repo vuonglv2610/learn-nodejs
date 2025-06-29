@@ -1,23 +1,16 @@
 const express = require('express');
 const voucherController = require('../controllers/voucher.controller');
+const { authMiddleware, requireAdmin } = require('../middleware/auth.middleware');
 const router = express.Router();
 
-// Lấy danh sách voucher
+// Public routes - customer có thể xem và check voucher
 router.get('/', voucherController.getList);
-
-// Lấy thông tin một voucher theo id
 router.get('/:id', voucherController.getOne);
-
-// Kiểm tra voucher theo mã
 router.get('/code/:code', voucherController.getByCode);
 
-// Tạo một voucher mới
-router.post('/', voucherController.create);
-
-// Cập nhật thông tin voucher
-router.put('/:id', voucherController.edit);
-
-// Xóa voucher
-router.delete('/:id', voucherController.remove);
+// Protected routes - chỉ admin quản lý voucher
+router.post('/', authMiddleware, requireAdmin, voucherController.create);
+router.put('/:id', authMiddleware, requireAdmin, voucherController.edit);
+router.delete('/:id', authMiddleware, requireAdmin, voucherController.remove);
 
 module.exports = router;

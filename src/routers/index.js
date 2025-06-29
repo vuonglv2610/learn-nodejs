@@ -16,6 +16,7 @@ const statisticsRoute = require('./statistics.route');
 const articleRoute = require('./article.route');
 const setupAssociations = require('./../models/associations');
 const sequelize = require('./../models/db');
+const { authMiddleware } = require('../middleware/auth.middleware');
 
 // Thiết lập các mối quan hệ giữa các model
 setupAssociations();
@@ -29,16 +30,16 @@ sequelize.sync({ force: false })
   });
 
 const routesArray = [
-  { path: '/api/products', route: productRoute },
+  { path: '/api/products', authMiddleware, route: productRoute },
   { path: '/api/categories', route: categoryRoute },
-  { path: '/api/users', route: userRoute },
+  { path: '/api/users',authMiddleware, route: userRoute },
   { path: '/api/customers', route: customerRoute },
   { path: '/api/shoppingcart', route: shoppingCartRoute },
   { path: '/api', route: authRoute },
   { path: '/api/roles', route: roleRoute },
   { path: '/api/profile', route: profileRoute },
   { path: '/api/serials', route: serialRoute },
-  { path: '/api/orders', route: orderRoute },
+  { path: '/api/orders',authMiddleware, route: orderRoute },
   { path: '/api/brands', route: brandRoute },
   { path: '/api/vouchers', route: voucherRoute },
   { path: '/api/comments', route: commentRoute },

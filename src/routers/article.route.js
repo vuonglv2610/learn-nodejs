@@ -1,20 +1,15 @@
 const express = require('express');
 const articleController = require('../controllers/article.controller');
+const { authMiddleware, requireAdmin } = require('../middleware/auth.middleware');
 const router = express.Router();
 
-// API admin - Lấy danh sách tất cả bài viết (cần auth)
-router.get('/', articleController.getList);
-
-// Lấy thông tin một bài viết theo id
+// Public route - đọc bài viết
 router.get('/:id', articleController.getOne);
+router.get('/', requireAdmin, articleController.getList);
 
-// Tạo một bài viết mới (cần auth)
-router.post('/', articleController.create);
-
-// Cập nhật thông tin bài viết (cần auth)
-router.put('/:id', articleController.edit);
-
-// Xóa bài viết (cần auth)
-router.delete('/:id', articleController.remove);
+// Protected routes - cần auth
+router.post('/', authMiddleware, requireAdmin, articleController.create);
+router.put('/:id', authMiddleware, requireAdmin, articleController.edit);
+router.delete('/:id', authMiddleware, requireAdmin, articleController.remove);
 
 module.exports = router;

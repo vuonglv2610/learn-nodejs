@@ -8,18 +8,7 @@ router.get('/', PaymentController.getList);
 
 // Lấy thông tin thanh toán theo ID
 router.get('/:id', PaymentController.getOne);
-
-// Tạo thanh toán từ giỏ hàng
 router.post('/create-from-cart', customerAuthMiddleware, PaymentController.createFromCart);
-
-// Xử lý thanh toán (cập nhật trạng thái)
-router.put('/process/:paymentId', PaymentController.processPayment);
-
-// Hoàn tiền
-router.put('/refund/:paymentId', PaymentController.refund);
-
-// Lấy thống kê thanh toán
-router.get('/statistics/overview', PaymentController.getStatistics);
 
 // check thông tin payment vnpay
 router.get('/check-vnpay', PaymentController.checkVnPay);

@@ -1,6 +1,8 @@
 const jwt = require('jsonwebtoken');
 const Response = require('../helpers/response');
 const UserModel = require('../models/user.model');
+const CustomerModel = require('../models/customer.model');
+const RoleModel = require('../models/role.model');
 
 const authMiddleware = async (req, res, next) => {
   const authHeader = req.header('Authorization');
@@ -16,22 +18,48 @@ const authMiddleware = async (req, res, next) => {
   }
 
   try {
+    // Verify JWT token
     const decoded = jwt.verify(token, process.env.KEY_JWT);
-    const data = await UserModel.findOne({
-      where: {
-        id: decoded.userId,
-        deletedAt: null,
-      },
-      // todo: add conditions query parameters
-    });
-    if (data.roleId === 1) {
-      return Response.fail(req, res, 401, 'Unauthorized');
+
+    let user = null;
+
+    // Kiểm tra xem token chứa userId hay customerId
+    if (decoded.userId) {
+      user = await UserModel.findOne({
+        where: { id: decoded.userId, deletedAt: null },
+        include: [{ model: RoleModel, as: 'role' }]
+      });
+    } else if (decoded.customerId) {
+      user = await CustomerModel.findOne({
+        where: { id: decoded.customerId, deletedAt: null },
+        include: [{ model: RoleModel, as: 'role' }]
+      });
     }
+
+    if (!user) {
+      return Response.fail(req, res, 401, 'User not found');
+    }
+
+    // Thêm thông tin user và role vào request
+    req.user = user;
+    req.role = user.role;
+
     next();
   } catch (error) {
-    return Response.fail(req, res, 400, 'Invalid token.');
+    if (error.name === 'TokenExpiredError') {
+      return Response.fail(req, res, 401, 'Token đã hết hạn');
+    }
+    return Response.fail(req, res, 401, 'Token không hợp lệ');
   }
 };
 
-module.exports = authMiddleware;
+// Middleware kiểm tra admin
+const requireAdmin = (req, res, next) => {
+  if (!req.role || req.role.role_key !== 'admin') {
+    return Response.fail(req, res, 403, 'Cần quyền admin');
+  }
+  next();
+};
+
+module.exports = { authMiddleware, requireAdmin };
 

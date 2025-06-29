@@ -1,26 +1,15 @@
 const express = require('express');
 const serialController = require('../controllers/serial.controller');
+const { authMiddleware, requireAdmin } = require('../middleware/auth.middleware');
 const router = express.Router();
 
-// Lấy danh sách tất cả serial
-router.get('/', serialController.getList);
-
-// Lấy thông tin một serial theo id
-router.get('/:id', serialController.getOne);
-
-// Lấy danh sách serial theo productId
-router.get('/product/:productId', serialController.getByProductId);
-
-// Tạo một serial mới
-router.post('/', serialController.create);
-
-// Tạo nhiều serial cùng lúc
-router.post('/bulk', serialController.bulkCreate);
-
-// Cập nhật thông tin serial
-router.put('/:id', serialController.edit);
-
-// Xóa serial
-router.delete('/:id', serialController.remove);
+// Protected routes - tất cả serial operations cần admin
+router.get('/', authMiddleware, requireAdmin, serialController.getList);
+router.get('/:id', authMiddleware, requireAdmin, serialController.getOne);
+router.get('/product/:productId', authMiddleware, requireAdmin, serialController.getByProductId);
+router.post('/', authMiddleware, requireAdmin, serialController.create);
+router.post('/bulk', authMiddleware, requireAdmin, serialController.bulkCreate);
+router.put('/:id', authMiddleware, requireAdmin, serialController.edit);
+router.delete('/:id', authMiddleware, requireAdmin, serialController.remove);
 
 module.exports = router;

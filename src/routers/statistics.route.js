@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const statisticsController = require('../controllers/statistics.controller');
-const authMiddleware = require('../middleware/auth.middleware');
+const { authMiddleware, requireAdmin } = require('../middleware/auth.middleware');
 
 // Middleware xác thực cho tất cả routes thống kê (chỉ admin mới được xem)
-router.use(authMiddleware);
+router.use(authMiddleware, requireAdmin);
 
 /**
  * @route GET /api/statistics/dashboard

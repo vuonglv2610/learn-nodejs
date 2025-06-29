@@ -1,19 +1,22 @@
 const express = require('express');
 const router = express.Router();
 const UserController = require('../controllers/user.controller');
-const authMiddleware = require('../middleware/auth.middleware');
+const { authMiddleware, requireAdmin } = require('../middleware/auth.middleware');
 
 //user sẽ update profile, đăng ký đăng nhập
 
-router.get('/', UserController.getList);
-
-router.get('/:id', UserController.getOne);
-
+// Public route - không cần auth (có thể để public để register)
 router.post('/', UserController.create);
 
-router.put('/edit/:id', UserController.edit);
+// Protected routes - cần authentication và authorization
+router.get('/', authMiddleware, UserController.getList);
 
-router.delete('/:id', UserController.remove);
+router.get('/:id', authMiddleware, UserController.getOne);
+
+router.put('/edit/:id', authMiddleware, UserController.edit);
+
+// Chỉ admin mới được xóa user
+router.delete('/:id', authMiddleware, requireAdmin, UserController.remove);
 
 module.exports = router;
 

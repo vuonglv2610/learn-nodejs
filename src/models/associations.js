@@ -68,6 +68,17 @@ const setupAssociations = () => {
     as: 'users'
   });
 
+  // Thiết lập quan hệ cho Customer và Roles
+  Customer.belongsTo(Roles, {
+    foreignKey: 'roleId',
+    as: 'role'
+  });
+
+  Roles.hasMany(Customer, {
+    foreignKey: 'roleId',
+    as: 'customers'
+  });
+
   // Order liên kết với Customer
   Order.belongsTo(Customer, {
     foreignKey: 'customerId',
