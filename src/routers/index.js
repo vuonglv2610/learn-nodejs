@@ -32,7 +32,8 @@ sequelize.sync({ force: false })
 const routesArray = [
   { path: '/api/products', authMiddleware, route: productRoute },
   { path: '/api/categories', route: categoryRoute },
-  { path: '/api/users',authMiddleware, route: userRoute },
+  // { path: '/api/users',authMiddleware, route: userRoute },
+  { path: '/api/users', route: userRoute },
   { path: '/api/customers', route: customerRoute },
   { path: '/api/shoppingcart', route: shoppingCartRoute },
   { path: '/api', route: authRoute },

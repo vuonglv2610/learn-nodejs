@@ -32,13 +32,25 @@ module.exports = {
         }
       }
 
+      // Debug log
+      console.log('🔍 Debug login:');
+      console.log('- Email:', email);
+      console.log('- Password length:', password ? password.length : 'null');
+      console.log('- Account found:', !!account);
+      console.log('- Account type:', accountType);
+      console.log('- Account has password:', !!account.password);
+      console.log('- Account password length:', account.password ? account.password.length : 'null');
+
       // Kiểm tra xem account có password không (có thể đăng ký qua Google)
       if (!account.password) {
         return Response.fail(req, res, 400, 'Tài khoản này được tạo qua Google. Vui lòng đăng nhập bằng Google');
       }
 
       // Kiểm tra mật khẩu
+      console.log('🔐 Comparing passwords...');
       const validPassword = await bcrypt.compare(password, account.password);
+      console.log('- Password valid:', validPassword);
+
       if (!validPassword) {
         return Response.fail(req, res, 400, 'Mật khẩu không đúng');
       }

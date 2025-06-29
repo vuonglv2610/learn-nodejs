@@ -117,8 +117,24 @@ module.exports = {
 
   create: async (req, res, result) => {
     try {
-      const user = await UserModel.create(req.body);
-      result(user);
+      const { password, ...userData } = req.body;
+      let hashedPassword = null;
+
+      // Hash password nếu có
+      if (password) {
+        const bcrypt = require('bcrypt');
+        hashedPassword = await bcrypt.hash(password, 10);
+      }
+
+      const user = await UserModel.create({
+        ...userData,
+        password: hashedPassword,
+        confirmPassword: hashedPassword,
+      });
+
+      // Loại bỏ password khỏi response
+      const { password: pwd, confirmPassword, ...userResponse } = user.toJSON();
+      result(userResponse);
     } catch (error) {
       console.error('Error creating user:', error);
       if (error.name === 'SequelizeUniqueConstraintError') {
@@ -132,13 +148,25 @@ module.exports = {
   edit: async (req, res, result) => {
     const id = req.params.id;
     try {
-      await UserModel.update(req.body, {
+      const updateData = { ...req.body };
+
+      // Nếu có cập nhật mật khẩu
+      if (updateData.password) {
+        const bcrypt = require('bcrypt');
+        updateData.password = await bcrypt.hash(updateData.password, 10);
+        updateData.confirmPassword = updateData.password;
+      }
+
+      await UserModel.update(updateData, {
         where: {
           id,
           deletedAt: null,
         },
       });
-      const updatedUser = await UserModel.findByPk(id);
+
+      const updatedUser = await UserModel.findByPk(id, {
+        attributes: { exclude: ['password', 'confirmPassword'] }
+      });
       result(updatedUser);
     } catch (error) {
       console.error('Error updating users:', error);

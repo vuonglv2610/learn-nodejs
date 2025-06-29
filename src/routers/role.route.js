@@ -5,7 +5,8 @@ const { authMiddleware, requireAdmin } = require('../middleware/auth.middleware'
 const router = express.Router();
 
 // Chỉ admin mới được xem danh sách roles
-router.get('/', authMiddleware, requireAdmin, async (req, res) => {
+// router.get('/', authMiddleware, requireAdmin, async (req, res) => {
+router.get('/', async (req, res) => {
     try {
         const roles = await Roles.findAll({
             where: {
