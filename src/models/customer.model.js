@@ -43,10 +43,6 @@ const Customer = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
-    roleId: {
-      type: DataTypes.UUID,
-      allowNull: false,
-    },
     createdAt: {
       type: DataTypes.DATE,
       allowNull: true,
