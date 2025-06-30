@@ -3,13 +3,13 @@ const router = express.Router();
 const UserController = require('../controllers/user.controller');
 const { requireAdmin } = require('../middleware/auth.middleware');
 
-router.post('/', UserController.create);
+router.post('/', requireAdmin, UserController.create);
 
 router.get('/' , UserController.getList);
 
 router.get('/:id', UserController.getOne);
 
-router.put('/edit/:id', UserController.edit);
+router.put('/edit/:id', requireAdmin, UserController.edit);
 
 // Chỉ admin mới được xóa user
 router.delete('/:id', requireAdmin, UserController.remove);
