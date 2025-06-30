@@ -35,7 +35,6 @@ passport.use(
               email: email,
               name: profile.displayName,
               google_id: profile.id,
-              roleId: '1',
             });
             console.log('Created new customer with Google login');
           } else {

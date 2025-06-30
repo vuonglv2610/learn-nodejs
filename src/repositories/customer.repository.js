@@ -83,7 +83,6 @@ module.exports = {
         ...customerData,
         password: hashedPassword,
         confirmPassword: hashedPassword,
-        roleId: req.body.roleId || '1', // Default role
       });
 
       const { password: pwd, confirmPassword, ...customerResponse } = customer.toJSON();

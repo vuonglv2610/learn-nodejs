@@ -13,8 +13,14 @@ const Comment = require('./comments.model');
 const Payment = require('./payment.model');
 const Article = require('./article.model');
 
+// Flag để tránh setup associations nhiều lần
+let associationsSetup = false;
+
 // Thiết lập các mối quan hệ
 const setupAssociations = () => {
+  if (associationsSetup) {
+    return; // Đã setup rồi, không setup lại
+  }
   // Thiết lập quan hệ cho Product
   Product.belongsTo(Category, {
     foreignKey: 'categoryId',
@@ -158,6 +164,9 @@ const setupAssociations = () => {
   });
 
   // Thiết lập các quan hệ khác nếu cần
+
+  associationsSetup = true;
+  console.log('🔗 Associations đã được thiết lập');
 };
 
 module.exports = setupAssociations;

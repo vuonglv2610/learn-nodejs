@@ -1,5 +1,6 @@
 const UserModel = require('../models/user.model');
 const CustomerModel = require('../models/customer.model');
+const RoleModel = require('../models/role.model');
 const Response = require('../helpers/response');
 const bcrypt = require('bcrypt');
 
@@ -32,17 +33,24 @@ module.exports = {
       
       // Kiểm tra loại tài khoản từ token
       if (decoded.customerId) {
-        // Tìm customer profile
+        // Tìm customer profile (không có role)
         profile = await CustomerModel.findOne({
           where: { id: decoded.customerId, deletedAt: null },
           attributes: { exclude: ['password', 'confirmPassword'] }
         });
         accountType = 'customer';
       } else if (decoded.userId) {
-        // Tìm user profile
+        // Tìm user profile với role information
         profile = await UserModel.findOne({
           where: { id: decoded.userId, deletedAt: null },
-          attributes: { exclude: ['password', 'confirmPassword'] }
+          attributes: { exclude: ['password', 'confirmPassword'] },
+          include: [
+            {
+              model: RoleModel,
+              as: 'role',
+              attributes: ['id', 'role', 'role_key']
+            }
+          ]
         });
         accountType = 'user';
       } else {
@@ -120,10 +128,26 @@ module.exports = {
       });
       
       // Lấy profile đã cập nhật
-      profile = await Model.findOne({
-        where: { id, deletedAt: null },
-        attributes: { exclude: ['password', 'confirmPassword'] }
-      });
+      if (decoded.userId) {
+        // User profile với role information
+        profile = await Model.findOne({
+          where: { id, deletedAt: null },
+          attributes: { exclude: ['password', 'confirmPassword'] },
+          include: [
+            {
+              model: RoleModel,
+              as: 'role',
+              attributes: ['id', 'role', 'role_key']
+            }
+          ]
+        });
+      } else {
+        // Customer profile (không có role)
+        profile = await Model.findOne({
+          where: { id, deletedAt: null },
+          attributes: { exclude: ['password', 'confirmPassword'] }
+        });
+      }
       
       if (!profile) {
         return Response.fail(req, res, 404, 'Profile not found');
