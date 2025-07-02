@@ -52,11 +52,12 @@ async function autoCreateAllTables() {
     const hasExistingTables = tables.length > 0;
 
     if (hasExistingTables) {
-      console.log(`✅ Đã có ${tables.length} bảng - Chỉ sync schema`);
-      await sequelize.sync({
-        alter: true,    // Cập nhật schema nếu có thay đổi
-        logging: false
-      });
+      console.log(`✅ Đã có ${tables.length} bảng - Bỏ qua sync để tránh lỗi`);
+      // Tạm thời comment sync để tránh lỗi "Too many keys"
+      // await sequelize.sync({
+      //   alter: true,    // Cập nhật schema nếu có thay đổi
+      //   logging: false
+      // });
     } else {
       console.log('⏳ Chưa có bảng - Tạo mới tất cả...');
       await sequelize.sync({
@@ -133,7 +134,7 @@ const routesArray = [
   { path: '/api/brands', route: brandRoute },
   { path: '/api/vouchers', route: voucherRoute },
   { path: '/api/comments', route: commentRoute },
-  { path: '/api/payments', authMiddleware, route: paymentRoute },
+  { path: '/api/payments', route: paymentRoute },
   { path: '/api/statistics', authMiddleware, route: statisticsRoute },
   { path: '/api/articles', route: articleRoute },
 ];

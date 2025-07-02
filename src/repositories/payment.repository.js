@@ -115,10 +115,11 @@ module.exports = {
   // Tạo thanh toán từ giỏ hàng
   createFromCart: async (req, res, result) => {
     const transaction = await sequelize.transaction();
-    
+    let payment; // Khai báo payment ở scope rộng hơn
+    let vnpayResponse; // Khai báo vnpayResponse ở scope rộng hơn
+
     try {
       const { customerId, paymentMethod, voucherId, description } = req.body;
-      
       // 1. Lấy tất cả sản phẩm trong giỏ hàng
       const cartItems = await ShoppingCartModel.findAll({
         where: {
@@ -145,7 +146,6 @@ module.exports = {
       for (const item of cartItems) {
         totalAmount += item.product.price * item.quantity;
       }
-      
       // 3. Áp dụng voucher nếu có
       let discountAmount = 0;
       let voucher = null;
@@ -182,7 +182,6 @@ module.exports = {
       }
       
       const finalAmount = totalAmount - discountAmount;
-      
       // 4. Tạo đơn hàng
       const order = await OrderModel.create({
         id: uuidv4(),
@@ -200,7 +199,7 @@ module.exports = {
       })
       const ipAddr = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
-      const vnpayResponse = await vnpay.buildPaymentUrl({
+      vnpayResponse = await vnpay.buildPaymentUrl({
         vnp_Amount: finalAmount,
         vnp_IpAddr: ipAddr,
         vnp_ReturnUrl: process.env.VNPAY_RETURN_URL,
@@ -212,9 +211,9 @@ module.exports = {
       })
       console.log("vnpayResponse: ", vnpayResponse)
       // TODO: sửa để tra về vnpREsponse cho client (link đến trang thanh toán)
-      
+
       // 5. Tạo thanh toán
-      const payment = await PaymentModel.create({
+      payment = await PaymentModel.create({
         id: uuidv4(),
         orderId: order.id,
         customerId: customerId,
@@ -227,7 +226,6 @@ module.exports = {
         discountAmount: discountAmount,
         finalAmount: finalAmount
       }, { transaction });
-      
       // 6. Xóa giỏ hàng sau khi tạo đơn hàng thành công
       await ShoppingCartModel.destroy({
         where: {
@@ -237,8 +235,15 @@ module.exports = {
       });
       
       await transaction.commit();
-      
-      // Lấy thông tin thanh toán đã tạo kèm thông tin liên quan
+
+    } catch (error) {
+      await transaction.rollback();
+      console.error('Error creating payment from cart:', error);
+      return result(null);
+    }
+
+    // Lấy thông tin thanh toán đã tạo kèm thông tin liên quan (sau khi commit)
+    try {
       const createdPayment = await PaymentModel.findOne({
         where: { id: payment.id },
         include: [
@@ -255,21 +260,24 @@ module.exports = {
           {
             model: VoucherModel,
             as: 'voucher',
-            attributes: ['id', 'code', 'discount_type', 'discount_value'],
+            attributes: ['id', 'code', 'discount_percent', 'start_date', 'end_date'],
             required: false
           }
         ]
       });
 
-      
-      await transaction.commit();
-      
-      
-      result(createdPayment);
+      // Trả về VNPay URL để redirect user đến trang thanh toán
+      result({
+        payment: createdPayment,
+        vnpayUrl: vnpayResponse
+      });
     } catch (error) {
-      await transaction.rollback();
-      console.error('Error creating payment from cart:', error);
-      result(null);
+      console.error('Error fetching created payment:', error);
+      // Nếu lỗi khi lấy thông tin payment, vẫn trả về response cơ bản
+      result({
+        payment: { id: payment.id },
+        vnpayUrl: vnpayResponse
+      });
     }
   },
 

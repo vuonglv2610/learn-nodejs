@@ -12,7 +12,7 @@ module.exports = {
       
       // Tìm kiếm theo customerId
       if (req.query.customer_id) {
-        whereCondition.customer_id = req.query.customer_id;
+        whereCondition.customerId = req.query.customerId;
       }
       
       // Tìm kiếm theo status
@@ -68,6 +68,32 @@ module.exports = {
       result(order);
     } catch (error) {
       console.error('Error executing query:', error);
+      result(null);
+    }
+  },
+
+  getByCustomer: async (req, res, result) => {
+    try {
+      const customerId = req.params.customerId;
+
+      const orders = await Order.findAll({
+        where: {
+          customerId: customerId,
+          deletedAt: null,
+        },
+        include: [
+          {
+            model: Customer,
+            as: 'customer',
+            attributes: ['id', 'name', 'email', 'phone']
+          }
+        ],
+        order: [['createdAt', 'DESC']]
+      });
+
+      result(orders);
+    } catch (error) {
+      console.error('Error fetching customer orders:', error);
       result(null);
     }
   },

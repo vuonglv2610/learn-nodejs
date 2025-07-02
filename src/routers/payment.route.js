@@ -4,7 +4,7 @@ const PaymentController = require('../controllers/payment.controller');
 const { authMiddleware, requireAdmin } = require('../middleware/auth.middleware');
 
 // Public routes - có thể không cần auth
-router.get('/check-vnpay', PaymentController.checkVnPay); // VNPay callback có thể cần public
+router.get('/check-payment', PaymentController.checkVnPay); // VNPay callback có thể cần public
 
 // Customer routes - cần đăng nhập
 router.post('/create-from-cart', authMiddleware, PaymentController.createFromCart);

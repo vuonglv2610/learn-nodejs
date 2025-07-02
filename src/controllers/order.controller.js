@@ -20,6 +20,15 @@ module.exports = {
     });
   },
 
+  getByCustomer: (req, res) => {
+    OrderRepository.getByCustomer(req, res, (data) => {
+      if (!data) {
+        return Response.fail(req, res, 404, 'Không tìm thấy đơn hàng cho khách hàng này');
+      }
+      return Response.success(req, res, 200, 'Lấy danh sách đơn hàng theo khách hàng thành công', data);
+    });
+  },
+
   create: (req, res) => {
     OrderRepository.create(req, res, (data) => {
       if (!data) {

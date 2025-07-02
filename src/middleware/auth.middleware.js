@@ -5,21 +5,27 @@ const CustomerModel = require('../models/customer.model');
 const RoleModel = require('../models/role.model');
 
 const authMiddleware = async (req, res, next) => {
+  console.log('🔍 Auth middleware called for:', req.method, req.path);
   const authHeader = req.header('Authorization');
+  console.log('📝 Auth header:', authHeader ? 'Present' : 'Missing');
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  if (!authHeader || !authHeader.startsWith('Bearer')) {
+    console.log('❌ Auth header invalid or missing');
     return Response.fail(req, res, 401, 'Unauthorized - Token required');
   }
 
   const token = authHeader.split(' ')[1];
+  console.log('🎫 Token extracted:', token ? 'Present' : 'Missing');
 
   if (!token) {
+    console.log('❌ Token missing after split');
     return Response.fail(req, res, 401, 'Unauthorized - Invalid token format');
   }
 
   try {
     // Verify JWT token
     const decoded = jwt.verify(token, process.env.KEY_JWT);
+    console.log('✅ Token decoded successfully:', { userId: decoded.userId, customerId: decoded.customerId });
 
     let user = null;
 
@@ -31,21 +37,25 @@ const authMiddleware = async (req, res, next) => {
       });
     } else if (decoded.customerId) {
       user = await CustomerModel.findOne({
-        where: { id: decoded.customerId, deletedAt: null },
-        include: [{ model: RoleModel, as: 'role' }]
+        where: { id: decoded.customerId, deletedAt: null }
+        // Customer không có quan hệ với Role, bỏ include
       });
     }
 
     if (!user) {
+      console.log('❌ User not found in database');
       return Response.fail(req, res, 401, 'User not found');
     }
 
+    console.log('✅ User found:', { id: user.id, email: user.email });
     // Thêm thông tin user và role vào request
     req.user = user;
     req.role = user.role;
 
+    console.log('✅ Auth middleware passed, proceeding to next()');
     next();
   } catch (error) {
+    console.log('❌ Token verification failed:', error.name, error.message);
     if (error.name === 'TokenExpiredError') {
       return Response.fail(req, res, 401, 'Token đã hết hạn');
     }

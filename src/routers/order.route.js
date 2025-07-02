@@ -4,6 +4,7 @@ const OrderController = require('../controllers/order.controller');
 const response = require('../helpers/response');
 
 router.get('/', OrderController.getList);
+router.get('/customer/:customerId', OrderController.getByCustomer);
 router.get('/:id', OrderController.getOne);
 router.post('/', OrderController.create);
 router.put('/:id', OrderController.edit);
