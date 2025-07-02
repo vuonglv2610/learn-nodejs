@@ -199,20 +199,7 @@ module.exports = {
       })
       const ipAddr = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
-      vnpayResponse = await vnpay.buildPaymentUrl({
-        vnp_Amount: finalAmount,
-        vnp_IpAddr: ipAddr,
-        vnp_ReturnUrl: process.env.VNPAY_RETURN_URL,
-        vnp_TxnRef: uuidv4(),// sau thay thành paymentId
-        vnp_OrderInfo: `${uuidv4()}`,
-        vnp_Locale: VnpLocale.VN,
-        vnp_CreateDate: dateFormat(new Date()),
-        vnp_ExpireDate: dateFormat(new Date(Date.now() + 20 * 60 * 1000)), // 20 phút sau khi tạo
-      })
-      console.log("vnpayResponse: ", vnpayResponse)
-      // TODO: sửa để tra về vnpREsponse cho client (link đến trang thanh toán)
-
-      // 5. Tạo thanh toán
+      // 5. Tạo thanh toán trước để có paymentId
       payment = await PaymentModel.create({
         id: uuidv4(),
         orderId: order.id,
@@ -226,6 +213,19 @@ module.exports = {
         discountAmount: discountAmount,
         finalAmount: finalAmount
       }, { transaction });
+
+      vnpayResponse = await vnpay.buildPaymentUrl({
+        vnp_Amount: finalAmount,
+        vnp_IpAddr: ipAddr,
+        vnp_ReturnUrl: process.env.VNPAY_RETURN_URL,
+        vnp_TxnRef: payment.id, // Sử dụng paymentId để có thể tìm được sau này
+        vnp_OrderInfo: payment.id, // Sử dụng paymentId làm orderInfo
+        vnp_Locale: VnpLocale.VN,
+        vnp_CreateDate: dateFormat(new Date()),
+        vnp_ExpireDate: dateFormat(new Date(Date.now() + 20 * 60 * 1000)), // 20 phút sau khi tạo
+      })
+      console.log("vnpayResponse: ", vnpayResponse)
+      // TODO: sửa để tra về vnpREsponse cho client (link đến trang thanh toán)
       // 6. Xóa giỏ hàng sau khi tạo đơn hàng thành công
       await ShoppingCartModel.destroy({
         where: {
@@ -278,6 +278,101 @@ module.exports = {
         payment: { id: payment.id },
         vnpayUrl: vnpayResponse
       });
+    }
+  },
+
+  // Cập nhật trạng thái thanh toán từ VNPay callback
+  updatePaymentStatus: async (req, res, orderInfo, paymentStatus, result) => {
+    const transaction = await sequelize.transaction();
+
+    try {
+      console.log('🔄 Updating payment status:', { orderInfo, paymentStatus });
+
+      // Tìm payment dựa trên orderInfo (có thể là orderId hoặc paymentId)
+      const payment = await PaymentModel.findOne({
+        where: {
+          [Op.or]: [
+            { orderId: orderInfo },
+            { id: orderInfo },
+            { transactionId: orderInfo }
+          ]
+        },
+        include: [
+          {
+            model: OrderModel,
+            as: 'order',
+            attributes: ['id', 'customerId', 'status']
+          },
+          {
+            model: CustomerModel,
+            as: 'customer',
+            attributes: ['id', 'name', 'email']
+          }
+        ],
+        transaction
+      });
+
+      if (!payment) {
+        await transaction.rollback();
+        console.log('❌ Payment not found for orderInfo:', orderInfo);
+        return result(null);
+      }
+
+      console.log('✅ Payment found:', { id: payment.id, customerId: payment.customerId });
+
+      // Cập nhật trạng thái payment
+      const updateData = {
+        paymentStatus: paymentStatus,
+        updatedAt: new Date()
+      };
+
+      // Thêm paymentDate và VNPay response nếu thanh toán thành công
+      if (paymentStatus === 'completed') {
+        // Sử dụng 'paid' để khớp với frontend
+        updateData.paymentStatus = 'paid';
+        updateData.paymentDate = new Date();
+        // Lưu thông tin VNPay response để audit
+        updateData.paymentGatewayResponse = req.query;
+      }
+
+      await payment.update(updateData, { transaction });
+      console.log('✅ Payment status updated:', { paymentId: payment.id, status: paymentStatus });
+
+      // Cập nhật trạng thái order nếu thanh toán thành công
+      if ((paymentStatus === 'completed' || paymentStatus === 'paid') && payment.order) {
+        await OrderModel.update({
+          status: 'confirmed', // Sử dụng 'confirmed' để khớp với frontend
+          updatedAt: new Date()
+        }, {
+          where: { id: payment.order.id },
+          transaction
+        });
+        console.log('✅ Order status updated to confirmed for order:', payment.order.id);
+      } else if (paymentStatus === 'failed' && payment.order) {
+        await OrderModel.update({
+          status: 'cancelled',
+          updatedAt: new Date()
+        }, {
+          where: { id: payment.order.id },
+          transaction
+        });
+        console.log('✅ Order status updated to cancelled for order:', payment.order.id);
+      }
+
+      await transaction.commit();
+
+      // Trả về thông tin customer để redirect đúng user
+      result({
+        paymentId: payment.id,
+        customerId: payment.customerId,
+        status: paymentStatus,
+        customer: payment.customer
+      });
+
+    } catch (error) {
+      await transaction.rollback();
+      console.error('Error updating payment status:', error);
+      result(null);
     }
   },
 
