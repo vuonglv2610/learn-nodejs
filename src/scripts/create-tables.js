@@ -19,6 +19,7 @@ const ProductModel = require('../models/product.model');
 const SerialModel = require('../models/serial.model');
 
 const OrderModel = require('../models/order.model');
+const OrderDetailModel = require('../models/orderdetail.model');
 const PaymentModel = require('../models/payment.model');
 
 const CommentModel = require('../models/comments.model');
@@ -59,11 +60,14 @@ async function createTables() {
     await SerialModel.sync({ force: true });
     console.log('✅ serials');
 
-    // 4. Tạo bảng orders và payments
-    console.log('📝 Tạo bảng orders và payments...');
+    // 4. Tạo bảng orders, order_details và payments
+    console.log('📝 Tạo bảng orders, order_details và payments...');
     await OrderModel.sync({ force: true });
     console.log('✅ orders');
-    
+
+    await OrderDetailModel.sync({ force: true });
+    console.log('✅ order_details');
+
     await PaymentModel.sync({ force: true });
     console.log('✅ payments');
 

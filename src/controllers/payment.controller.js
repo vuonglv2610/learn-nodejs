@@ -61,7 +61,7 @@ module.exports = {
       return Response.fail(req, res, 400, 'paymentStatus là bắt buộc');
     }
     
-    const validStatuses = ['pending', 'processing', 'completed', 'failed', 'cancelled', 'refunded'];
+    const validStatuses = ['pending', 'paid', 'failed', 'refunded'];
     if (!validStatuses.includes(paymentStatus)) {
       return Response.fail(req, res, 400, 'Trạng thái thanh toán không hợp lệ');
     }
@@ -138,7 +138,7 @@ module.exports = {
       let message = 'Thanh toán thất bại';
 
       if (SUCCESS_CODES.includes(vnp_ResponseCode)) {
-        paymentStatus = 'completed';
+        paymentStatus = 'paid';  // Thay đổi từ 'completed' thành 'paid'
         message = 'Thanh toán thành công';
       } else if (FAILED_INTERNAL_CODES.includes(vnp_ResponseCode)) {
         paymentStatus = 'failed';

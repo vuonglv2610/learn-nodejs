@@ -8,6 +8,7 @@ const customerRoute = require('./customer.route');
 const profileRoute = require('./profile.route');
 const serialRoute = require('./serial.route');
 const orderRoute = require('./order.route');
+const orderDetailRoute = require('./orderdetail.route');
 const brandRoute = require('./brand.route');
 const voucherRoute = require('./voucher.route');
 const commentRoute = require('./comment.route');
@@ -131,6 +132,7 @@ const routesArray = [
   { path: '/api/profile', authMiddleware, route: profileRoute },
   { path: '/api/serials', route: serialRoute },
   { path: '/api/orders', route: orderRoute },
+  { path: '/api/order-details', route: orderDetailRoute },
   { path: '/api/brands', route: brandRoute },
   { path: '/api/vouchers', route: voucherRoute },
   { path: '/api/comments', route: commentRoute },

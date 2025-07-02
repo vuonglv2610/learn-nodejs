@@ -1,6 +1,7 @@
 const { v4: uuidv4 } = require('uuid');
 const PaymentModel = require('../models/payment.model');
 const OrderModel = require('../models/order.model');
+const OrderDetailModel = require('../models/orderdetail.model');
 const CustomerModel = require('../models/customer.model');
 const VoucherModel = require('../models/voucher.model');
 const ShoppingCartModel = require('../models/shoppingcart.model');
@@ -182,6 +183,7 @@ module.exports = {
       }
       
       const finalAmount = totalAmount - discountAmount;
+
       // 4. Tạo đơn hàng
       const order = await OrderModel.create({
         id: uuidv4(),
@@ -190,6 +192,20 @@ module.exports = {
         status: 'pending',
         total_amount: finalAmount
       }, { transaction });
+
+      // 5. Tạo order details từ cart items
+      const orderDetailsData = cartItems.map(item => ({
+        id: uuidv4(),
+        orderId: order.id,
+        productId: item.product_id,
+        quantity: item.quantity,
+        unit_price: item.product.price, // Sử dụng giá hiện tại của sản phẩm
+        total_price: item.quantity * item.product.price,
+        serial_numbers: null // Có thể thêm logic assign serial numbers sau
+      }));
+
+      await OrderDetailModel.bulkCreate(orderDetailsData, { transaction });
+      console.log(`✅ Đã tạo ${orderDetailsData.length} order details cho order ${order.id}`);
       const vnpay = new VNPay({
         tmnCode: process.env.VNPAY_TMN_CODE,
         secureSecret: process.env.VNPAY_SECRET_KEY,
@@ -250,7 +266,20 @@ module.exports = {
           {
             model: OrderModel,
             as: 'order',
-            attributes: ['id', 'order_date', 'status', 'total_amount']
+            attributes: ['id', 'order_date', 'status', 'total_amount'],
+            include: [
+              {
+                model: OrderDetailModel,
+                as: 'orderDetails',
+                include: [
+                  {
+                    model: ProductModel,
+                    as: 'product',
+                    attributes: ['id', 'name', 'sku', 'price', 'img']
+                  }
+                ]
+              }
+            ]
           },
           {
             model: CustomerModel,
@@ -327,8 +356,7 @@ module.exports = {
       };
 
       // Thêm paymentDate và VNPay response nếu thanh toán thành công
-      if (paymentStatus === 'completed') {
-        // Sử dụng 'paid' để khớp với frontend
+      if (paymentStatus === 'paid') {
         updateData.paymentStatus = 'paid';
         updateData.paymentDate = new Date();
         // Lưu thông tin VNPay response để audit
@@ -339,7 +367,7 @@ module.exports = {
       console.log('✅ Payment status updated:', { paymentId: payment.id, status: paymentStatus });
 
       // Cập nhật trạng thái order nếu thanh toán thành công
-      if ((paymentStatus === 'completed' || paymentStatus === 'paid') && payment.order) {
+      if (paymentStatus === 'paid' && payment.order) {
         await OrderModel.update({
           status: 'confirmed', // Sử dụng 'confirmed' để khớp với frontend
           updatedAt: new Date()
@@ -403,15 +431,15 @@ module.exports = {
         paymentGatewayResponse: paymentGatewayResponse
       };
       
-      if (paymentStatus === 'completed') {
+      if (paymentStatus === 'paid') {
         updateData.paymentDate = new Date();
-        
+
         // Cập nhật trạng thái đơn hàng
         await OrderModel.update(
           { status: 'processing' },
           { where: { id: payment.orderId }, transaction }
         );
-      } else if (paymentStatus === 'failed' || paymentStatus === 'cancelled') {
+      } else if (paymentStatus === 'failed') {
         // Cập nhật trạng thái đơn hàng
         await OrderModel.update(
           { status: 'cancelled' },
@@ -595,7 +623,7 @@ module.exports = {
         overview: {
           totalPayments,
           totalAmount: totalAmount || 0,
-          completedPayments: statusStats.find(s => s.paymentStatus === 'completed')?.dataValues.count || 0
+          paidPayments: statusStats.find(s => s.paymentStatus === 'paid')?.dataValues.count || 0
         },
         statusBreakdown: statusStats.map(stat => ({
           status: stat.paymentStatus,

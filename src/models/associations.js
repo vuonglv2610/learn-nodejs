@@ -6,6 +6,7 @@ const ShoppingCart = require('./shoppingcart.model');
 const User = require('./user.model');
 const Roles = require('./role.model');
 const Order = require('./order.model');
+const OrderDetail = require('./orderdetail.model');
 const Customer = require('./customer.model');
 const Brand = require('./brand.model');
 const Voucher = require('./voucher.model');
@@ -141,6 +142,12 @@ const setupAssociations = () => {
     as: 'payments'
   });
 
+  // Thêm quan hệ hasOne cho trường hợp 1 order có 1 payment chính
+  Order.hasOne(Payment, {
+    foreignKey: 'orderId',
+    as: 'payment'
+  });
+
   Customer.hasMany(Payment, {
     foreignKey: 'customerId',
     as: 'payments'
@@ -161,6 +168,28 @@ const setupAssociations = () => {
   User.hasMany(Article, {
     foreignKey: 'userId',
     as: 'articles'
+  });
+
+  // Thiết lập quan hệ cho OrderDetail
+  OrderDetail.belongsTo(Order, {
+    foreignKey: 'orderId',
+    as: 'order'
+  });
+
+  OrderDetail.belongsTo(Product, {
+    foreignKey: 'productId',
+    as: 'product'
+  });
+
+  // Thiết lập quan hệ ngược lại
+  Order.hasMany(OrderDetail, {
+    foreignKey: 'orderId',
+    as: 'orderDetails'
+  });
+
+  Product.hasMany(OrderDetail, {
+    foreignKey: 'productId',
+    as: 'orderDetails'
   });
 
   // Thiết lập các quan hệ khác nếu cần
