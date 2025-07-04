@@ -1,11 +1,17 @@
 require('dotenv').config();
 const express = require('express');
 const morgan = require('morgan');
-const routes = require('./routers');
 const cors = require('cors');
-const app = express();
 const bodyParser = require('body-parser');
 const port = process.env.PORT;
+
+// Khởi tạo database và associations trước khi làm gì khác
+const { initializeDatabase } = require('./models/init');
+initializeDatabase();
+
+// Import routes sau khi database đã được khởi tạo
+const routes = require('./routers');
+const app = express();
 
 // Logger
 app.use(morgan('combined'));

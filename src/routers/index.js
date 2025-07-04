@@ -15,9 +15,10 @@ const commentRoute = require('./comment.route');
 const paymentRoute = require('./payment.route');
 const statisticsRoute = require('./statistics.route');
 const articleRoute = require('./article.route');
-const setupAssociations = require('./../models/associations');
+const { isInitialized } = require('./../models/init');
 const sequelize = require('./../models/db');
 const { authMiddleware } = require('../middleware/auth.middleware');
+const { checkAssociations } = require('../middleware/associations.middleware');
 
 // Import config
 const dbConfig = require('../config/database-mode');
@@ -41,9 +42,12 @@ async function autoCreateAllTables() {
     await sequelize.query('SET FOREIGN_KEY_CHECKS = 0');
     console.log('🔓 Đã tắt foreign key checks');
 
-    // Bước 2: Setup associations trước khi sync
-    setupAssociations();
-    console.log('🔗 Đã thiết lập tất cả associations');
+    // Bước 2: Kiểm tra associations đã được setup chưa
+    if (!isInitialized()) {
+      console.error('❌ Associations chưa được thiết lập! Có lỗi trong quá trình khởi tạo.');
+      throw new Error('Database associations not initialized');
+    }
+    console.log('✅ Associations đã được thiết lập trong server.js');
 
     // Bước 3: Kiểm tra và tạo bảng nếu cần
     console.log('📋 Kiểm tra bảng hiện có...');
@@ -118,32 +122,46 @@ async function autoCreateAllTables() {
   }
 }
 
-// Chạy tạo bảng tự động
-autoCreateAllTables();
+// Chỉ chạy autoCreateAllTables trong development mode
+// Trong production, associations đã được thiết lập trong server.js
+if (process.env.NODE_ENV !== 'production' && process.env.AUTO_CREATE_TABLES !== 'false') {
+  console.log('🔧 Development mode: Chạy autoCreateAllTables...');
+  autoCreateAllTables();
+} else {
+  console.log('🚀 Production mode: Bỏ qua autoCreateAllTables (associations đã được thiết lập trong server.js)');
+}
 
 const routesArray = [
-  { path: '/api/products', route: productRoute },
-  { path: '/api/categories', route: categoryRoute },
-  { path: '/api/users', authMiddleware, route: userRoute },
-  { path: '/api/customers', route: customerRoute },
-  { path: '/api/shoppingcart', authMiddleware, route: shoppingCartRoute },
+  { path: '/api/products', middleware: checkAssociations, route: productRoute },
+  { path: '/api/categories', middleware: checkAssociations, route: categoryRoute },
+  { path: '/api/users', middleware: [authMiddleware, checkAssociations], route: userRoute },
+  { path: '/api/customers', middleware: checkAssociations, route: customerRoute },
+  { path: '/api/shoppingcart', middleware: [authMiddleware, checkAssociations], route: shoppingCartRoute },
   { path: '/api', route: authRoute },
-  { path: '/api/roles', route: roleRoute },
-  { path: '/api/profile', authMiddleware, route: profileRoute },
-  { path: '/api/serials', route: serialRoute },
-  { path: '/api/orders', route: orderRoute },
-  { path: '/api/order-details', route: orderDetailRoute },
-  { path: '/api/brands', route: brandRoute },
-  { path: '/api/vouchers', route: voucherRoute },
-  { path: '/api/comments', route: commentRoute },
-  { path: '/api/payments', route: paymentRoute },
-  { path: '/api/statistics', authMiddleware, route: statisticsRoute },
-  { path: '/api/articles', route: articleRoute },
+  { path: '/api/roles', middleware: checkAssociations, route: roleRoute },
+  { path: '/api/profile', middleware: [authMiddleware, checkAssociations], route: profileRoute },
+  { path: '/api/serials', middleware: checkAssociations, route: serialRoute },
+  { path: '/api/orders', middleware: checkAssociations, route: orderRoute },
+  { path: '/api/order-details', middleware: checkAssociations, route: orderDetailRoute },
+  { path: '/api/brands', middleware: checkAssociations, route: brandRoute },
+  { path: '/api/vouchers', middleware: checkAssociations, route: voucherRoute },
+  { path: '/api/comments', middleware: checkAssociations, route: commentRoute },
+  { path: '/api/payments', middleware: checkAssociations, route: paymentRoute },
+  { path: '/api/statistics', middleware: [authMiddleware, checkAssociations], route: statisticsRoute },
+  { path: '/api/articles', middleware: checkAssociations, route: articleRoute },
 ];
 
 function routes(app) {
   routesArray.forEach((route) => {
-    app.use(route.path, route.route);
+    if (route.middleware) {
+      if (Array.isArray(route.middleware)) {
+        app.use(route.path, ...route.middleware, route.route);
+      } else {
+        app.use(route.path, route.middleware, route.route);
+      }
+    } else {
+      app.use(route.path, route.route);
+    }
   });
 }
 
