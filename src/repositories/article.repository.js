@@ -119,6 +119,10 @@ module.exports = {
         return Response.fail(req, res, 400, 'UserId là bắt buộc');
       }
 
+      if (!req.body.img) {
+        return Response.fail(req, res, 400, 'Ảnh là bắt buộc');
+      }
+
       // Kiểm tra user có tồn tại không
       const user = await UserModel.findByPk(req.body.userId);
       if (!user) {

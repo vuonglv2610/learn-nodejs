@@ -31,7 +31,7 @@ module.exports = {
                     [Sequelize.fn('COUNT', Sequelize.col('id')), 'total_transactions']
                 ],
                 where: {
-                    paymentStatus: 'completed',
+                    paymentStatus: 'paid',
                     createdAt: {
                         [Op.between]: [startDate, endDate]
                     }
@@ -59,7 +59,7 @@ module.exports = {
             // Doanh thu hôm nay
             const todayRevenue = await Payment.sum('amount', {
                 where: {
-                    paymentStatus: 'completed',
+                    paymentStatus: 'paid',
                     createdAt: {
                         [Op.gte]: startOfToday
                     }
@@ -69,7 +69,7 @@ module.exports = {
             // Doanh thu tháng này
             const monthRevenue = await Payment.sum('amount', {
                 where: {
-                    paymentStatus: 'completed',
+                    paymentStatus: 'paid',
                     createdAt: {
                         [Op.gte]: startOfMonth
                     }
@@ -79,7 +79,7 @@ module.exports = {
             // Doanh thu năm này
             const yearRevenue = await Payment.sum('amount', {
                 where: {
-                    paymentStatus: 'completed',
+                    paymentStatus: 'paid',
                     createdAt: {
                         [Op.gte]: startOfYear
                     }
@@ -174,23 +174,26 @@ module.exports = {
     getTopSellingProducts: async (limit = 10, startDate, endDate) => {
         try {
             const topProducts = await sequelize.query(`
-                SELECT 
+                SELECT
                     p.id,
                     p.name,
                     p.price,
                     p.img,
                     b.name as brand_name,
                     c.name as category_name,
-                    COUNT(s.id) as sold_quantity,
-                    SUM(p.price) as total_revenue
+                    COALESCE(SUM(od.quantity), 0) as sold_quantity,
+                    COALESCE(SUM(od.total_price), 0) as total_revenue
                 FROM products p
-                LEFT JOIN serials s ON p.id = s.productId AND s.status = 'sold'
-                LEFT JOIN orders o ON s.orderId = o.id
+                LEFT JOIN order_details od ON p.id = od.productId
+                LEFT JOIN orders o ON od.orderId = o.id
                 LEFT JOIN brands b ON p.brandId = b.id
                 LEFT JOIN categories c ON p.categoryId = c.id
-                WHERE o.createdAt BETWEEN :startDate AND :endDate
-                    AND o.status IN ('delivered', 'shipped')
+                WHERE (o.createdAt BETWEEN :startDate AND :endDate OR o.createdAt IS NULL)
+                    AND (o.status IN ('confirmed', 'processing', 'shipped', 'delivered') OR o.status IS NULL)
+                    AND (o.deletedAt IS NULL OR o.deletedAt IS NULL)
+                    AND (od.deletedAt IS NULL OR od.deletedAt IS NULL)
                 GROUP BY p.id, p.name, p.price, p.img, b.name, c.name
+                HAVING sold_quantity > 0
                 ORDER BY sold_quantity DESC
                 LIMIT :limit
             `, {
@@ -264,14 +267,16 @@ module.exports = {
                     c.id,
                     c.name as category_name,
                     COUNT(DISTINCT p.id) as total_products,
-                    COUNT(s.id) as sold_quantity,
-                    SUM(p.price) as total_revenue
+                    COALESCE(SUM(od.quantity), 0) as sold_quantity,
+                    COALESCE(SUM(od.total_price), 0) as total_revenue
                 FROM categories c
                 LEFT JOIN products p ON c.id = p.categoryId
-                LEFT JOIN serials s ON p.id = s.productId AND s.status = 'sold'
-                LEFT JOIN orders o ON s.orderId = o.id
-                WHERE o.createdAt BETWEEN :startDate AND :endDate
-                    AND o.status IN ('delivered', 'shipped')
+                LEFT JOIN order_details od ON p.id = od.productId
+                LEFT JOIN orders o ON od.orderId = o.id
+                WHERE (o.createdAt BETWEEN :startDate AND :endDate OR o.createdAt IS NULL)
+                    AND (o.status IN ('confirmed', 'processing', 'shipped', 'delivered') OR o.status IS NULL)
+                    AND (o.deletedAt IS NULL OR o.deletedAt IS NULL)
+                    AND (od.deletedAt IS NULL OR od.deletedAt IS NULL)
                 GROUP BY c.id, c.name
                 ORDER BY total_revenue DESC
             `, {
@@ -295,14 +300,16 @@ module.exports = {
                     b.name as brand_name,
                     b.logo,
                     COUNT(DISTINCT p.id) as total_products,
-                    COUNT(s.id) as sold_quantity,
-                    SUM(p.price) as total_revenue
+                    COALESCE(SUM(od.quantity), 0) as sold_quantity,
+                    COALESCE(SUM(od.total_price), 0) as total_revenue
                 FROM brands b
                 LEFT JOIN products p ON b.id = p.brandId
-                LEFT JOIN serials s ON p.id = s.productId AND s.status = 'sold'
-                LEFT JOIN orders o ON s.orderId = o.id
-                WHERE o.createdAt BETWEEN :startDate AND :endDate
-                    AND o.status IN ('delivered', 'shipped')
+                LEFT JOIN order_details od ON p.id = od.productId
+                LEFT JOIN orders o ON od.orderId = o.id
+                WHERE (o.createdAt BETWEEN :startDate AND :endDate OR o.createdAt IS NULL)
+                    AND (o.status IN ('confirmed', 'processing', 'shipped', 'delivered') OR o.status IS NULL)
+                    AND (o.deletedAt IS NULL OR o.deletedAt IS NULL)
+                    AND (od.deletedAt IS NULL OR od.deletedAt IS NULL)
                 GROUP BY b.id, b.name, b.logo
                 ORDER BY total_revenue DESC
             `, {
@@ -327,7 +334,7 @@ module.exports = {
                     [Sequelize.fn('SUM', Sequelize.col('amount')), 'total_amount']
                 ],
                 where: {
-                    paymentStatus: 'completed',
+                    paymentStatus: 'paid',
                     createdAt: {
                         [Op.between]: [startDate, endDate]
                     }
@@ -349,7 +356,7 @@ module.exports = {
         try {
             const currentRevenue = await Payment.sum('amount', {
                 where: {
-                    paymentStatus: 'completed',
+                    paymentStatus: 'paid',
                     createdAt: {
                         [Op.between]: [currentStart, currentEnd]
                     }
@@ -358,7 +365,7 @@ module.exports = {
 
             const previousRevenue = await Payment.sum('amount', {
                 where: {
-                    paymentStatus: 'completed',
+                    paymentStatus: 'paid',
                     createdAt: {
                         [Op.between]: [previousStart, previousEnd]
                     }
