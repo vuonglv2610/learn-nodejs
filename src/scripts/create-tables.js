@@ -23,7 +23,7 @@ const OrderDetailModel = require('../models/orderdetail.model');
 const PaymentModel = require('../models/payment.model');
 
 const CommentModel = require('../models/comments.model');
-const ArticleModel = require('../models/article.model');
+
 const ShoppingCartModel = require('../models/shoppingcart.model');
 
 async function createTables() {
@@ -76,8 +76,7 @@ async function createTables() {
     await CommentModel.sync({ force: true });
     console.log('✅ comments');
     
-    await ArticleModel.sync({ force: true });
-    console.log('✅ articles');
+
     
     await ShoppingCartModel.sync({ force: true });
     console.log('✅ shoppingcart');

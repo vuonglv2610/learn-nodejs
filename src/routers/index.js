@@ -14,7 +14,7 @@ const voucherRoute = require('./voucher.route');
 const commentRoute = require('./comment.route');
 const paymentRoute = require('./payment.route');
 const statisticsRoute = require('./statistics.route');
-const articleRoute = require('./article.route');
+
 const { isInitialized } = require('./../models/init');
 const sequelize = require('./../models/db');
 const { authMiddleware } = require('../middleware/auth.middleware');
@@ -148,7 +148,7 @@ const routesArray = [
   { path: '/api/comments', middleware: checkAssociations, route: commentRoute },
   { path: '/api/payments', middleware: checkAssociations, route: paymentRoute },
   { path: '/api/statistics', middleware: [authMiddleware, checkAssociations], route: statisticsRoute },
-  { path: '/api/articles', middleware: checkAssociations, route: articleRoute },
+
 ];
 
 function routes(app) {

@@ -12,7 +12,6 @@ const Brand = require('./brand.model');
 const Voucher = require('./voucher.model');
 const Comment = require('./comments.model');
 const Payment = require('./payment.model');
-const Article = require('./article.model');
 
 // Flag để tránh setup associations nhiều lần
 let associationsSetup = false;
@@ -158,17 +157,7 @@ const setupAssociations = () => {
     as: 'payments'
   });
 
-  // Thiết lập quan hệ cho Article
-  Article.belongsTo(User, {
-    foreignKey: 'userId',
-    as: 'author'
-  });
 
-  // User có nhiều Article
-  User.hasMany(Article, {
-    foreignKey: 'userId',
-    as: 'articles'
-  });
 
   // Thiết lập quan hệ cho OrderDetail
   OrderDetail.belongsTo(Order, {
