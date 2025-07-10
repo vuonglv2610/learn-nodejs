@@ -3,7 +3,49 @@ const { Op } = require('sequelize');
 const CommentModel = require('../models/comments.model');
 const CustomerModel = require('../models/customer.model');
 const ProductModel = require('../models/product.model');
+const OrderModel = require('../models/order.model');
+const OrderDetailModel = require('../models/orderdetail.model');
+const PaymentModel = require('../models/payment.model');
 const Response = require('../helpers/response');
+
+// Helper function để kiểm tra customer đã mua sản phẩm chưa
+const checkPurchaseHistory = async (customerId, productId) => {
+  try {
+    // Tìm order detail có customerId và productId với payment đã paid
+    const purchaseRecord = await OrderDetailModel.findOne({
+      where: {
+        productId: productId,
+        deletedAt: null
+      },
+      include: [
+        {
+          model: OrderModel,
+          as: 'order',
+          where: {
+            customerId: customerId,
+            deletedAt: null
+          },
+          include: [
+            {
+              model: PaymentModel,
+              as: 'payment',
+              where: {
+                paymentStatus: 'paid'
+              },
+              required: true // INNER JOIN - chỉ lấy order có payment paid
+            }
+          ],
+          required: true
+        }
+      ]
+    });
+
+    return purchaseRecord !== null;
+  } catch (error) {
+    console.error('Error checking purchase history:', error);
+    return false;
+  }
+};
 
 module.exports = {
   get: async (req, res, result) => {
@@ -133,17 +175,24 @@ module.exports = {
       if (!product) {
         return Response.fail(req, res, 404, 'Sản phẩm không tồn tại');
       }
-      
+
       // Kiểm tra xem khách hàng có tồn tại không
       const customer = await CustomerModel.findByPk(req.body.customerId);
       if (!customer) {
         return Response.fail(req, res, 404, 'Khách hàng không tồn tại');
       }
-      
-      // Tạo comment mới
+
+      // Kiểm tra xem khách hàng đã mua sản phẩm này chưa
+      const hasPurchased = await checkPurchaseHistory(req.body.customerId, req.body.productId);
+      if (!hasPurchased) {
+        return Response.fail(req, res, 403, 'Bạn chỉ có thể đánh giá sản phẩm đã mua');
+      }
+
+      // Tạo comment mới với isVerifiedPurchase = true
       const comment = await CommentModel.create({
         id: uuidv4(),
-        ...req.body
+        ...req.body,
+        isVerifiedPurchase: true // Đánh dấu là đã xác minh mua hàng
       });
       
       // Lấy comment với thông tin khách hàng và sản phẩm

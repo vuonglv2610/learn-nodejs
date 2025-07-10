@@ -1,6 +1,7 @@
 const Order = require('../models/order.model');
 const Customer = require('../models/customer.model');
 const { Op } = require('sequelize');
+const sequelize = require('../models/db');
 
 module.exports = {
   get: async (req, res, result) => {
@@ -111,17 +112,65 @@ module.exports = {
   },
 
   update: async (req, res, result) => {
+    const transaction = await sequelize.transaction();
+
     try {
-      const order = await Order.findByPk(req.params.id);
-      
+      const orderId = req.params.id;
+      const updateData = req.body;
+
+      const order = await Order.findByPk(orderId, { transaction });
+
       if (!order) {
+        await transaction.rollback();
         return result(null);
       }
-      
-      await order.update(req.body);
+
+      // Lưu trạng thái cũ để so sánh
+      const oldStatus = order.status;
+      const newStatus = updateData.status;
+
+      console.log(`🔄 Updating order ${orderId} from ${oldStatus} to ${newStatus}`);
+
+      // Cập nhật order
+      await order.update(updateData, { transaction });
+
+      // Logic COD: Tự động cập nhật payment status khi order chuyển sang 'delivered'
+      if (newStatus === 'delivered' && oldStatus !== 'delivered') {
+        console.log('🚚 Order delivered, checking for COD payment...');
+
+        // Tìm payment của order này
+        const Payment = require('../models/payment.model');
+        const payment = await Payment.findOne({
+          where: { orderId: orderId },
+          transaction
+        });
+
+        if (payment) {
+          console.log(`💳 Found payment: method=${payment.paymentMethod}, status=${payment.paymentStatus}`);
+
+          // Nếu là COD và chưa thanh toán, tự động chuyển sang 'paid'
+          if (payment.paymentMethod === 'cash' && payment.paymentStatus === 'pending') {
+            await payment.update({
+              paymentStatus: 'paid',
+              paymentDate: new Date(),
+              updatedAt: new Date()
+            }, { transaction });
+
+            console.log('💰 COD payment automatically updated to paid for order:', orderId);
+          } else {
+            console.log(`ℹ️ Payment not updated: method=${payment.paymentMethod}, status=${payment.paymentStatus}`);
+          }
+        } else {
+          console.log('⚠️ No payment found for order:', orderId);
+        }
+      }
+
+      await transaction.commit();
+      console.log('✅ Order update completed successfully');
       result(order);
     } catch (error) {
-      console.error('Error updating order:', error);
+      await transaction.rollback();
+      console.error('❌ Error updating order:', error);
       result(null);
     }
   },

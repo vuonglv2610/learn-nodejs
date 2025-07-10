@@ -44,6 +44,11 @@ const authMiddleware = async (req, res, next) => {
     req.user = user;
     req.role = user.role;
 
+    // Thêm req.customer nếu là customer token
+    if (decoded.customerId) {
+      req.customer = user;
+    }
+
     next();
   } catch (error) {
     if (error.name === 'TokenExpiredError') {

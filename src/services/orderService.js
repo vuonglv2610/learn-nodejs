@@ -196,11 +196,38 @@ class OrderService {
         orderData.total_amount = totalAmount;
       }
 
+      // Lưu trạng thái cũ để so sánh (cho logic COD)
+      const oldStatus = existingOrder.status;
+      const newStatus = orderData.status;
+
       // Cập nhật order
       await Order.update(orderData, {
         where: { id: orderId },
         transaction
       });
+
+      // Logic COD: Tự động cập nhật payment status khi order chuyển sang 'delivered'
+      if (newStatus === 'delivered' && oldStatus !== 'delivered') {
+        console.log('🚚 Order delivered, checking for COD payment...');
+
+        // Tìm payment của order này
+        const Payment = require('../models/payment.model');
+        const payment = await Payment.findOne({
+          where: { orderId: orderId },
+          transaction
+        });
+
+        // Nếu là COD và chưa thanh toán, tự động chuyển sang 'paid'
+        if (payment && payment.paymentMethod === 'cash' && payment.paymentStatus === 'pending') {
+          await payment.update({
+            paymentStatus: 'paid',
+            paymentDate: new Date(),
+            updatedAt: new Date()
+          }, { transaction });
+
+          console.log('💰 COD payment automatically updated to paid for order:', orderId);
+        }
+      }
 
       // Commit transaction
       await transaction.commit();
