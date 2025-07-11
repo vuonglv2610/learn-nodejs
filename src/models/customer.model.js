@@ -40,7 +40,7 @@ const Customer = sequelize.define(
       allowNull: true,
     },
     avatar: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT,
       allowNull: true,
     },
     createdAt: {

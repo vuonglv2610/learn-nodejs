@@ -25,7 +25,7 @@ const Payment = sequelize.define(
       }
     },
     paymentMethod: {
-      type: DataTypes.ENUM('cash','vnpay'),
+      type: DataTypes.ENUM('cash', 'credit_card', 'debit_card', 'bank_transfer', 'e_wallet', 'momo', 'zalopay', 'vnpay'),
       allowNull: false,
       defaultValue: 'cash'
     },

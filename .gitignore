@@ -3,6 +3,7 @@ node_modules/
 .env.production
 .vscode
 .vercel
+docs/
 
 # Test files - không cần đẩy lên production server
 src/test/
