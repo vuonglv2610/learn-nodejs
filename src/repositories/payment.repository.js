@@ -64,7 +64,7 @@ module.exports = {
           {
             model: VoucherModel,
             as: 'voucher',
-            attributes: ['id', 'code', 'discount_type', 'discount_value'],
+            attributes: ['id', 'code', 'discount_percent', 'start_date', 'end_date'],
             required: false
           }
         ],
@@ -100,7 +100,7 @@ module.exports = {
           {
             model: VoucherModel,
             as: 'voucher',
-            attributes: ['id', 'code', 'discount_type', 'discount_value'],
+            attributes: ['id', 'code', 'discount_percent', 'start_date', 'end_date'],
             required: false
           }
         ]
@@ -156,24 +156,22 @@ module.exports = {
           where: {
             id: voucherId,
             deletedAt: null,
-            isActive: true,
-            validFrom: { [Op.lte]: new Date() },
-            validTo: { [Op.gte]: new Date() },
-            used: { [Op.lt]: Sequelize.col('usageLimit') }
+            start_date: { [Op.lte]: new Date() },
+            end_date: { [Op.gte]: new Date() },
+            [Op.or]: [
+              { quantity: { [Op.gt]: Sequelize.col('used') } },
+              { quantity: null }
+            ]
           },
           transaction
         });
-        
+
         if (voucher) {
-          if (voucher.discount_type === 'percentage') {
-            discountAmount = (totalAmount * voucher.discount_value) / 100;
-            if (voucher.maxDiscount && discountAmount > voucher.maxDiscount) {
-              discountAmount = voucher.maxDiscount;
-            }
-          } else if (voucher.discount_type === 'fixed') {
-            discountAmount = voucher.discount_value;
+          // Voucher model chỉ hỗ trợ discount_percent
+          if (voucher.discount_percent) {
+            discountAmount = (totalAmount * voucher.discount_percent) / 100;
           }
-          
+
           // Cập nhật số lần sử dụng voucher
           await VoucherModel.update(
             { used: voucher.used + 1 },

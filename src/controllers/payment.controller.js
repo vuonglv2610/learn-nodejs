@@ -8,7 +8,7 @@ module.exports = {
       if (!data) {
         return Response.fail(req, res, 500, 'Lỗi khi lấy danh sách thanh toán');
       }
-      return Response.success(req, res, 200, 'Lấy danh sách thanh toán thành công', data);
+      return Response.success(req, res, data, 200);
     });
   },
 
@@ -18,7 +18,7 @@ module.exports = {
       if (!data) {
         return Response.fail(req, res, 404, 'Không tìm thấy thanh toán');
       }
-      return Response.success(req, res, 200, 'Lấy thông tin thanh toán thành công', data);
+      return Response.success(req, res, data, 200);
     });
   },
 
@@ -49,7 +49,7 @@ module.exports = {
         return Response.fail(req, res, 400, data.error);
       }
       
-      return Response.success(req, res, 201, 'Tạo thanh toán thành công', data);
+      return Response.success(req, res, data, 201);
     });
   },
 
@@ -75,7 +75,7 @@ module.exports = {
         return Response.fail(req, res, 400, data.error);
       }
       
-      return Response.success(req, res, 200, 'Xử lý thanh toán thành công', data);
+      return Response.success(req, res, data, 200);
     });
   },
 
@@ -96,7 +96,7 @@ module.exports = {
         return Response.fail(req, res, 400, data.error);
       }
       
-      return Response.success(req, res, 200, 'Hoàn tiền thành công', data);
+      return Response.success(req, res, data, 200);
     });
   },
 
@@ -106,7 +106,7 @@ module.exports = {
       if (!data) {
         return Response.fail(req, res, 500, 'Lỗi khi lấy thống kê thanh toán');
       }
-      return Response.success(req, res, 200, 'Lấy thống kê thanh toán thành công', data);
+      return Response.success(req, res, data, 200);
     });
   },
 
