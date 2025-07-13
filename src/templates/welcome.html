@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chào mừng đến với HVStore</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f4;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 300;
+        }
+        .header .emoji {
+            font-size: 48px;
+            margin-bottom: 20px;
+            display: block;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .welcome-message {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .features {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 30px 0;
+        }
+        .feature-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 16px;
+            color: #555;
+        }
+        .feature-item:last-child {
+            margin-bottom: 0;
+        }
+        .feature-icon {
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            margin-right: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+            margin: 20px 0;
+            transition: transform 0.2s;
+        }
+        .cta-button:hover {
+            transform: translateY(-2px);
+        }
+        .footer {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 30px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        .social-links {
+            margin: 20px 0;
+        }
+        .social-links a {
+            display: inline-block;
+            margin: 0 10px;
+            color: #3498db;
+            text-decoration: none;
+        }
+        @media (max-width: 600px) {
+            .container {
+                margin: 0;
+                box-shadow: none;
+            }
+            .header, .content, .footer {
+                padding: 20px;
+            }
+            .header h1 {
+                font-size: 24px;
+            }
+            .features {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <span class="emoji">🎉</span>
+            <h1>Chào mừng đến với HVStore!</h1>
+        </div>
+        
+        <div class="content">
+            <div class="welcome-message">
+                <p>Xin chào <strong>{{customerName}}</strong>,</p>
+                <p>Cảm ơn bạn đã đăng ký tài khoản tại <strong>HVStore</strong> - cửa hàng công nghệ hàng đầu Việt Nam!</p>
+                <p>Chúng tôi rất vui mừng chào đón bạn trở thành thành viên của gia đình HVStore.</p>
+            </div>
+
+            <div class="features">
+                <h3 style="margin-top: 0; color: #333; font-size: 20px;">🌟 Những lợi ích dành cho bạn:</h3>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">📱</div>
+                    <span>Sản phẩm công nghệ chính hãng với giá tốt nhất</span>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">🚚</div>
+                    <span>Giao hàng nhanh chóng toàn quốc</span>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">🛡️</div>
+                    <span>Bảo hành chính hãng và hỗ trợ 24/7</span>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">💰</div>
+                    <span>Ưu đãi và khuyến mãi độc quyền cho thành viên</span>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">⭐</div>
+                    <span>Tích điểm và nhận quà tặng hấp dẫn</span>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="{{websiteUrl}}" class="cta-button">🛒 Khám phá ngay</a>
+            </div>
+
+            <div style="background-color: #e8f4fd; border-left: 4px solid #3498db; padding: 20px; margin: 30px 0; border-radius: 4px;">
+                <h4 style="margin: 0 0 10px 0; color: #2980b9;">💡 Mẹo nhỏ:</h4>
+                <p style="margin: 0; color: #34495e;">Hãy theo dõi email để không bỏ lỡ những ưu đãi đặc biệt và sản phẩm mới nhất từ HVStore!</p>
+            </div>
+
+            <p style="color: #666; font-size: 16px;">
+                Nếu bạn có bất kỳ câu hỏi nào, đừng ngần ngại liên hệ với chúng tôi qua email 
+                <a href="mailto:{{supportEmail}}" style="color: #3498db;">{{supportEmail}}</a>
+            </p>
+
+            <p style="color: #666; font-size: 16px;">
+                Chúc bạn có những trải nghiệm mua sắm tuyệt vời!<br>
+                <strong>Đội ngũ HVStore</strong> ❤️
+            </p>
+        </div>
+        
+        <div class="footer">
+            <div class="social-links">
+                <a href="#">📘 Facebook</a>
+                <a href="#">📷 Instagram</a>
+                <a href="#">🐦 Twitter</a>
+                <a href="#">📺 YouTube</a>
+            </div>
+            
+            <p>© {{currentYear}} HVStore. Tất cả quyền được bảo lưu.</p>
+            <p>
+                <a href="{{websiteUrl}}/privacy">Chính sách bảo mật</a> | 
+                <a href="{{websiteUrl}}/terms">Điều khoản sử dụng</a> | 
+                <a href="{{websiteUrl}}/contact">Liên hệ</a>
+            </p>
+            
+            <p style="font-size: 12px; color: #95a5a6; margin-top: 20px;">
+                Email này được gửi tự động. Vui lòng không trả lời email này.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

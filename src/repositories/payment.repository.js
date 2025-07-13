@@ -10,6 +10,7 @@ const SerialModel = require('../models/serial.model');
 const { Op, Sequelize } = require('sequelize');
 const sequelize = require('../models/db');
 const { VNPay, ignoreLogger, VnpLocale, dateFormat } = require('vnpay');
+const { sendOrderConfirmationEmail, sendPaymentSuccessEmail } = require('../services/emailService');
 require('dotenv').config();
 
 module.exports = {
@@ -142,15 +143,38 @@ module.exports = {
         return result({ error: 'Giỏ hàng trống' });
       }
       
-      // 2. Tính tổng tiền
+      // 2. Tính tổng tiền với validation
       let totalAmount = 0;
+      console.log('🛒 Cart Items:');
       for (const item of cartItems) {
-        totalAmount += item.product.price * item.quantity;
+        // Validate product price
+        if (item.product.price > 500000000) { // 500 triệu/sản phẩm
+          await transaction.rollback();
+          return result({ error: `Sản phẩm "${item.product.name}" có giá quá cao (${item.product.price.toLocaleString('vi-VN')} VND)` });
+        }
+
+        // Validate quantity
+        if (item.quantity > 1000) {
+          await transaction.rollback();
+          return result({ error: `Số lượng sản phẩm "${item.product.name}" quá lớn (${item.quantity})` });
+        }
+
+        const itemTotal = item.product.price * item.quantity;
+
+        // Validate item total
+        if (itemTotal > 800000000) { // 800 triệu/item
+          await transaction.rollback();
+          return result({ error: `Tổng tiền cho sản phẩm "${item.product.name}" quá lớn (${itemTotal.toLocaleString('vi-VN')} VND)` });
+        }
+
+        totalAmount += itemTotal;
+        console.log(`- ${item.product.name}: ${item.product.price.toLocaleString('vi-VN')} x ${item.quantity} = ${itemTotal.toLocaleString('vi-VN')} VND`);
       }
+      console.log(`💰 Total Amount: ${totalAmount.toLocaleString('vi-VN')} VND`);
       // 3. Áp dụng voucher nếu có
       let discountAmount = 0;
       let voucher = null;
-      
+
       if (voucherId) {
         voucher = await VoucherModel.findOne({
           where: {
@@ -166,21 +190,57 @@ module.exports = {
           transaction
         });
 
-        if (voucher) {
-          // Voucher model chỉ hỗ trợ discount_percent
-          if (voucher.discount_percent) {
-            discountAmount = (totalAmount * voucher.discount_percent) / 100;
-          }
-
-          // Cập nhật số lần sử dụng voucher
-          await VoucherModel.update(
-            { used: voucher.used + 1 },
-            { where: { id: voucherId }, transaction }
-          );
+        if (!voucher) {
+          await transaction.rollback();
+          return result({ error: 'Voucher không hợp lệ hoặc đã hết hạn' });
         }
+
+        // Kiểm tra customer đã sử dụng voucher này chưa
+        const existingPayment = await PaymentModel.findOne({
+          where: {
+            customerId: customerId,
+            voucherId: voucherId,
+            paymentStatus: 'paid',
+            deletedAt: null
+          },
+          transaction
+        });
+
+        if (existingPayment) {
+          await transaction.rollback();
+          return result({ error: 'Bạn đã sử dụng voucher này rồi' });
+        }
+
+        // Voucher model chỉ hỗ trợ discount_percent
+        if (voucher.discount_percent) {
+          discountAmount = (totalAmount * voucher.discount_percent) / 100;
+        }
+
+        // Cập nhật số lần sử dụng voucher
+        await VoucherModel.update(
+          { used: voucher.used + 1 },
+          { where: { id: voucherId }, transaction }
+        );
       }
       
       const finalAmount = totalAmount - discountAmount;
+
+      // Kiểm tra số tiền cuối cùng phải > 0 và không quá lớn
+      if (finalAmount <= 0) {
+        await transaction.rollback();
+        return result({ error: 'Số tiền thanh toán phải lớn hơn 0' });
+      }
+
+      // VNPay giới hạn amount: 5,000 - 999,999,999 VND
+      if (finalAmount < 5000) {
+        await transaction.rollback();
+        return result({ error: 'Số tiền thanh toán tối thiểu là 5,000 VND' });
+      }
+
+      if (finalAmount > 999999999) {
+        await transaction.rollback();
+        return result({ error: 'Số tiền thanh toán tối đa là 999,999,999 VND (dưới 1 tỷ)' });
+      }
 
       // 4. Tạo đơn hàng
       const order = await OrderModel.create({
@@ -204,14 +264,6 @@ module.exports = {
 
       await OrderDetailModel.bulkCreate(orderDetailsData, { transaction });
       console.log(`✅ Đã tạo ${orderDetailsData.length} order details cho order ${order.id}`);
-      const vnpay = new VNPay({
-        tmnCode: process.env.VNPAY_TMN_CODE,
-        secureSecret: process.env.VNPAY_SECRET_KEY,
-        vnpayHost: process.env.VNPAY_HOST,
-        testMode: true,
-        loggerFn:ignoreLogger,
-      })
-      const ipAddr = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
       // 5. Tạo thanh toán trước để có paymentId
       payment = await PaymentModel.create({
@@ -228,26 +280,63 @@ module.exports = {
         finalAmount: finalAmount
       }, { transaction });
 
-      vnpayResponse = await vnpay.buildPaymentUrl({
-        vnp_Amount: finalAmount,
-        vnp_IpAddr: ipAddr,
-        vnp_ReturnUrl: process.env.VNPAY_RETURN_URL,
-        vnp_TxnRef: payment.id, // Sử dụng paymentId để có thể tìm được sau này
-        vnp_OrderInfo: payment.id, // Sử dụng paymentId làm orderInfo
-        vnp_Locale: VnpLocale.VN,
-        vnp_CreateDate: dateFormat(new Date()),
-        vnp_ExpireDate: dateFormat(new Date(Date.now() + 20 * 60 * 1000)), // 20 phút sau khi tạo
-      })
-      console.log("vnpayResponse: ", vnpayResponse)
-      // TODO: sửa để tra về vnpREsponse cho client (link đến trang thanh toán)
-      // 6. Xóa giỏ hàng sau khi tạo đơn hàng thành công
-      await ShoppingCartModel.destroy({
-        where: {
-          customer_id: customerId
-        },
-        transaction
-      });
-      
+      // 6. Tạo VNPay URL chỉ khi payment method là vnpay
+      if (paymentMethod === 'vnpay') {
+        // Kiểm tra cấu hình VNPay
+        if (!process.env.VNPAY_TMN_CODE || !process.env.VNPAY_SECRET_KEY || !process.env.VNPAY_HOST) {
+          await transaction.rollback();
+          return result({ error: 'Cấu hình VNPay chưa đầy đủ. Vui lòng liên hệ admin.' });
+        }
+
+        const vnpay = new VNPay({
+          tmnCode: process.env.VNPAY_TMN_CODE,
+          secureSecret: process.env.VNPAY_SECRET_KEY,
+          vnpayHost: process.env.VNPAY_HOST,
+          testMode: true,
+          loggerFn: ignoreLogger,
+        });
+
+        // Xử lý IP address
+        let ipAddr = req.headers['x-forwarded-for'] || req.socket.remoteAddress || req.connection.remoteAddress;
+        if (ipAddr === '::1' || ipAddr === '127.0.0.1') {
+          ipAddr = '127.0.0.1'; // VNPay không chấp nhận IPv6 localhost
+        }
+
+        console.log('💰 VNPay Payment Details:');
+        console.log('- Total Amount:', totalAmount);
+        console.log('- Discount Amount:', discountAmount);
+        console.log('- Final Amount:', finalAmount);
+        console.log('- VNPay Amount (library will auto x100):', finalAmount);
+        console.log('- IP Address:', ipAddr);
+
+        // Kiểm tra nếu amount quá lớn (VNPay library sẽ tự nhân 100)
+        if (finalAmount > 999999999) { // > 999M (library sẽ nhân thành 99.9B)
+          console.error('❌ VNPay amount too large:', finalAmount);
+          await transaction.rollback();
+          return result({ error: 'Số tiền thanh toán quá lớn cho VNPay. Vui lòng liên hệ hỗ trợ.' });
+        }
+
+        try {
+          vnpayResponse = vnpay.buildPaymentUrl({
+            vnp_Amount: finalAmount, // VNPay library tự động nhân 100
+            vnp_IpAddr: ipAddr,
+            vnp_ReturnUrl: process.env.VNPAY_RETURN_URL,
+            vnp_TxnRef: payment.id, // Sử dụng paymentId để có thể tìm được sau này
+            vnp_OrderInfo: payment.id, // Sử dụng paymentId làm orderInfo
+            vnp_Locale: VnpLocale.VN,
+            vnp_CreateDate: dateFormat(new Date()),
+            vnp_ExpireDate: dateFormat(new Date(Date.now() + 20 * 60 * 1000)), // 20 phút sau khi tạo
+          });
+
+          console.log("✅ VNPay URL created successfully:", vnpayResponse);
+        } catch (vnpayError) {
+          console.error("❌ VNPay URL creation failed:", vnpayError);
+          await transaction.rollback();
+          return result({ error: 'Không thể tạo link thanh toán VNPay. Vui lòng thử lại.' });
+        }
+      }
+
+      // 7. Commit transaction (không xóa giỏ hàng ở đây, sẽ xóa khi thanh toán thành công)
       await transaction.commit();
 
     } catch (error) {
@@ -292,6 +381,29 @@ module.exports = {
           }
         ]
       });
+
+      // Gửi email xác nhận đơn hàng
+      try {
+        const orderItems = createdPayment.order.orderDetails.map(detail => ({
+          productName: detail.product.name,
+          quantity: detail.quantity,
+          unitPrice: detail.unit_price,
+          totalPrice: detail.total_price
+        }));
+
+        await sendOrderConfirmationEmail(createdPayment.customer.email, {
+          customerName: createdPayment.customer.name,
+          orderId: createdPayment.order.id,
+          orderDate: createdPayment.order.order_date,
+          totalAmount: createdPayment.finalAmount,
+          items: orderItems
+        });
+
+        console.log('✅ Order confirmation email sent successfully');
+      } catch (emailError) {
+        console.error('❌ Error sending order confirmation email:', emailError);
+        // Không throw error để không ảnh hưởng đến flow chính
+      }
 
       // Trả về VNPay URL để redirect user đến trang thanh toán
       result({
@@ -386,6 +498,34 @@ module.exports = {
       }
 
       await transaction.commit();
+
+      // Xử lý sau khi thanh toán thành công
+      if (paymentStatus === 'paid') {
+        try {
+          // Xóa giỏ hàng khi thanh toán thành công
+          await ShoppingCartModel.destroy({
+            where: {
+              customer_id: payment.customerId
+            }
+          });
+          console.log('✅ Shopping cart cleared after successful payment');
+
+          // Gửi email thông báo thanh toán thành công
+          await sendPaymentSuccessEmail(payment.customer.email, {
+            customerName: payment.customer.name,
+            orderId: payment.order.id,
+            paymentId: payment.id,
+            paymentDate: new Date(),
+            paymentMethod: payment.paymentMethod,
+            amount: payment.finalAmount
+          });
+
+          console.log('✅ Payment success email sent successfully');
+        } catch (emailError) {
+          console.error('❌ Error in post-payment processing:', emailError);
+          // Không throw error để không ảnh hưởng đến flow chính
+        }
+      }
 
       // Trả về thông tin customer để redirect đúng user
       result({

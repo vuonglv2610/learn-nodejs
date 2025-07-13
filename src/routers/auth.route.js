@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const passport = require('passport');
 const AuthController = require('../controllers/auth.controller');
-const { sendEmailService } = require('../services/emailService.js');
+const { sendWelcomeEmail } = require('../services/emailService.js');
 require('../services/passport');
 
 router.post('/login', AuthController.login);
@@ -26,7 +26,7 @@ router.get(
       if (accessToken && profile?.emails?.[0]?.value) {
         req.accessToken = accessToken;
         try {
-          await sendEmailService(profile.emails[0].value);
+          await sendWelcomeEmail(profile.emails[0].value, profile.displayName);
         } catch (emailError) {
           console.error('Error sending email:', emailError);
           // Continue even if email fails

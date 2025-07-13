@@ -4,6 +4,7 @@ const Product = require('../models/product.model');
 const Customer = require('../models/customer.model');
 const Payment = require('../models/payment.model');
 const sequelize = require('../models/db');
+const { sendOrderStatusEmail } = require('./emailService');
 
 class OrderService {
   /**
@@ -234,6 +235,26 @@ class OrderService {
 
       // Lấy thông tin đầy đủ của order đã cập nhật
       const updatedOrder = await this.getOrderWithDetails(orderId);
+
+      // Gửi email thông báo thay đổi trạng thái (nếu có thay đổi)
+      if (newStatus && oldStatus !== newStatus) {
+        try {
+          const customer = await Customer.findByPk(updatedOrder.customerId);
+          if (customer && customer.email) {
+            await sendOrderStatusEmail(customer.email, {
+              customerName: customer.name,
+              orderId: orderId,
+              oldStatus: oldStatus,
+              newStatus: newStatus
+            });
+
+            console.log('✅ Order status email sent successfully');
+          }
+        } catch (emailError) {
+          console.error('❌ Error sending order status email:', emailError);
+          // Không throw error để không ảnh hưởng đến flow chính
+        }
+      }
 
       return updatedOrder;
 

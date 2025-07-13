@@ -4,7 +4,7 @@ const UserModel = require('../models/user.model');
 const CustomerModel = require('../models/customer.model');
 const Response = require('../helpers/response');
 const { v4: uuidv4 } = require('uuid');
-const { sendEmailService } = require('../services/emailService.js');
+const { sendWelcomeEmail } = require('../services/emailService.js');
 
 module.exports = {
   login: async (req, res) => {
@@ -147,7 +147,7 @@ module.exports = {
         password: hashedPassword,
         confirmPassword: hashedPassword,
       });
-      await sendEmailService(email);
+      await sendWelcomeEmail(email, name);
       Response.success(req, res, user, 200);
     } catch (error) {
       if (error.name === 'SequelizeUniqueConstraintError') {

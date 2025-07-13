@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xác nhận đơn hàng</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f4;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 300;
+        }
+        .header .emoji {
+            font-size: 48px;
+            margin-bottom: 20px;
+            display: block;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .order-info {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 30px 0;
+        }
+        .order-info h3 {
+            margin: 0 0 20px 0;
+            color: #2c3e50;
+            font-size: 20px;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+            font-weight: bold;
+            font-size: 18px;
+            color: #27ae60;
+        }
+        .info-label {
+            color: #7f8c8d;
+            font-weight: 500;
+        }
+        .info-value {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        .order-items {
+            margin: 30px 0;
+        }
+        .order-items h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .items-table th {
+            background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+            color: white;
+            padding: 15px 10px;
+            text-align: left;
+            font-weight: 600;
+        }
+        .items-table th:last-child,
+        .items-table td:last-child {
+            text-align: right;
+        }
+        .items-table td {
+            padding: 15px 10px;
+            border-bottom: 1px solid #ecf0f1;
+            color: #2c3e50;
+        }
+        .items-table tr:last-child td {
+            border-bottom: none;
+        }
+        .items-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+            margin: 20px 0;
+            transition: transform 0.2s;
+        }
+        .cta-button:hover {
+            transform: translateY(-2px);
+        }
+        .status-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .footer {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 30px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        .next-steps {
+            background-color: #e8f6f3;
+            border-left: 4px solid #27ae60;
+            padding: 20px;
+            margin: 30px 0;
+            border-radius: 4px;
+        }
+        .next-steps h4 {
+            margin: 0 0 15px 0;
+            color: #27ae60;
+        }
+        .next-steps ul {
+            margin: 0;
+            padding-left: 20px;
+            color: #2c3e50;
+        }
+        .next-steps li {
+            margin-bottom: 8px;
+        }
+        @media (max-width: 600px) {
+            .container {
+                margin: 0;
+                box-shadow: none;
+            }
+            .header, .content, .footer {
+                padding: 20px;
+            }
+            .header h1 {
+                font-size: 24px;
+            }
+            .order-info, .next-steps {
+                padding: 20px;
+            }
+            .items-table {
+                font-size: 14px;
+            }
+            .items-table th,
+            .items-table td {
+                padding: 10px 8px;
+            }
+            .info-row {
+                flex-direction: column;
+                gap: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <span class="emoji">📦</span>
+            <h1>Xác nhận đơn hàng</h1>
+            <span class="status-badge">Đã tiếp nhận</span>
+        </div>
+        
+        <div class="content">
+            <p style="font-size: 18px; color: #2c3e50; margin-bottom: 30px;">
+                Xin chào <strong>{{customerName}}</strong>,
+            </p>
+            
+            <p style="color: #555; font-size: 16px;">
+                Cảm ơn bạn đã đặt hàng tại <strong>HVStore</strong>! Chúng tôi đã nhận được đơn hàng của bạn và đang tiến hành xử lý.
+            </p>
+
+            <div class="order-info">
+                <h3>📋 Thông tin đơn hàng</h3>
+                
+                <div class="info-row">
+                    <span class="info-label">Mã đơn hàng:</span>
+                    <span class="info-value">#{{orderId}}</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">Ngày đặt hàng:</span>
+                    <span class="info-value">{{orderDate}}</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">Trạng thái:</span>
+                    <span class="info-value">Đang xử lý</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">Tổng tiền:</span>
+                    <span class="info-value">{{totalAmount}}</span>
+                </div>
+            </div>
+
+            <div class="order-items">
+                <h3>🛍️ Sản phẩm đã đặt</h3>
+                <table class="items-table">
+                    <thead>
+                        <tr>
+                            <th>Sản phẩm</th>
+                            <th style="text-align: center;">Số lượng</th>
+                            <th>Đơn giá</th>
+                            <th>Thành tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{orderItems}}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="next-steps">
+                <h4>📌 Các bước tiếp theo:</h4>
+                <ul>
+                    <li>Chúng tôi sẽ xác nhận và chuẩn bị đơn hàng trong vòng 24 giờ</li>
+                    <li>Bạn sẽ nhận được email thông báo khi đơn hàng được giao cho đơn vị vận chuyển</li>
+                    <li>Thời gian giao hàng dự kiến: 2-5 ngày làm việc</li>
+                    <li>Bạn có thể theo dõi trạng thái đơn hàng qua link bên dưới</li>
+                </ul>
+            </div>
+
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="{{trackingUrl}}" class="cta-button">🔍 Theo dõi đơn hàng</a>
+            </div>
+
+            <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; margin: 30px 0; border-radius: 4px;">
+                <h4 style="margin: 0 0 10px 0; color: #856404;">⚠️ Lưu ý quan trọng:</h4>
+                <p style="margin: 0; color: #856404;">
+                    Vui lòng kiểm tra kỹ thông tin đơn hàng. Nếu có sai sót, hãy liên hệ với chúng tôi ngay để được hỗ trợ kịp thời.
+                </p>
+            </div>
+
+            <p style="color: #666; font-size: 16px;">
+                Nếu bạn có bất kỳ câu hỏi nào về đơn hàng, vui lòng liên hệ với chúng tôi qua email 
+                <a href="mailto:{{supportEmail}}" style="color: #27ae60;">{{supportEmail}}</a>
+            </p>
+
+            <p style="color: #666; font-size: 16px;">
+                Cảm ơn bạn đã tin tưởng và lựa chọn HVStore!<br>
+                <strong>Đội ngũ HVStore</strong> 🙏
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p>© {{currentYear}} HVStore. Tất cả quyền được bảo lưu.</p>
+            <p>
+                <a href="{{websiteUrl}}/privacy">Chính sách bảo mật</a> | 
+                <a href="{{websiteUrl}}/terms">Điều khoản sử dụng</a> | 
+                <a href="{{websiteUrl}}/contact">Liên hệ</a>
+            </p>
+            
+            <p style="font-size: 12px; color: #95a5a6; margin-top: 20px;">
+                Email này được gửi tự động. Vui lòng không trả lời email này.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

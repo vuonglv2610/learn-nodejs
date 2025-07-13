@@ -123,12 +123,25 @@ module.exports = {
     try {
       const productId = req.params.id;
       
-      // Lấy thông tin sản phẩm
+      // Lấy thông tin sản phẩm kèm brand và category
       const product = await ProductModel.findOne({
         where: {
           id: productId,
           deletedAt: null,
         },
+        include: [
+          {
+            model: CategoryModel,
+            as: 'category',
+            attributes: ['id', 'name']
+          },
+          {
+            model: BrandModel,
+            as: 'brand',
+            attributes: ['id', 'name'],
+            required: false
+          }
+        ],
         attributes: [
           'id', 'sku', 'name', 'price', 'img', 'description', 'categoryId','brandId', 'createdAt', 'updatedAt'
         ]
@@ -162,7 +175,20 @@ module.exports = {
       
       const productJson = product.toJSON();
       productJson.quantity = serialCount;
-      
+
+      // Thêm brandName và categoryName
+      if (productJson.category) {
+        productJson.categoryName = productJson.category.name;
+        // Giữ lại categoryId từ product, xóa object category
+        delete productJson.category;
+      }
+
+      if (productJson.brand) {
+        productJson.brandName = productJson.brand.name;
+        // Giữ lại brandId từ product, xóa object brand
+        delete productJson.brand;
+      }
+
       result(productJson);
     } catch (error) {
       console.error('Error executing query:', error);

@@ -8,7 +8,7 @@ module.exports = {
       if (!data) {
         return Response.fail(req, res, 500, 'Lỗi khi lấy danh sách thanh toán');
       }
-      return Response.success(req, res, data, 200);
+      return Response.success(req, res, 200, 'Lấy danh sách thanh toán thành công', data);
     });
   },
 
@@ -18,7 +18,7 @@ module.exports = {
       if (!data) {
         return Response.fail(req, res, 404, 'Không tìm thấy thanh toán');
       }
-      return Response.success(req, res, data, 200);
+      return Response.success(req, res, 200, 'Lấy thông tin thanh toán thành công', data);
     });
   },
 
@@ -35,9 +35,9 @@ module.exports = {
       return Response.fail(req, res, 400, 'paymentMethod là bắt buộc');
     }
     
-    const validPaymentMethods = ['cash', 'credit_card', 'debit_card', 'bank_transfer', 'e_wallet', 'momo', 'zalopay', 'vnpay'];
+    const validPaymentMethods = ['cash', 'vnpay'];
     if (!validPaymentMethods.includes(paymentMethod)) {
-      return Response.fail(req, res, 400, 'Phương thức thanh toán không hợp lệ');
+      return Response.fail(req, res, 400, 'Phương thức thanh toán không hợp lệ. Chỉ hỗ trợ: cash, vnpay');
     }
     
     PaymentRepository.createFromCart(req, res, (data) => {
@@ -49,7 +49,7 @@ module.exports = {
         return Response.fail(req, res, 400, data.error);
       }
       
-      return Response.success(req, res, data, 201);
+      return Response.success(req, res, 201, 'Tạo thanh toán thành công', data);
     });
   },
 
@@ -75,7 +75,7 @@ module.exports = {
         return Response.fail(req, res, 400, data.error);
       }
       
-      return Response.success(req, res, data, 200);
+      return Response.success(req, res, 200, 'Xử lý thanh toán thành công', data);
     });
   },
 
@@ -96,7 +96,7 @@ module.exports = {
         return Response.fail(req, res, 400, data.error);
       }
       
-      return Response.success(req, res, data, 200);
+      return Response.success(req, res, 200, 'Hoàn tiền thành công', data);
     });
   },
 
@@ -106,7 +106,7 @@ module.exports = {
       if (!data) {
         return Response.fail(req, res, 500, 'Lỗi khi lấy thống kê thanh toán');
       }
-      return Response.success(req, res, data, 200);
+      return Response.success(req, res, 200, 'Lấy thống kê thanh toán thành công', data);
     });
   },
 
@@ -127,6 +127,14 @@ module.exports = {
       } = req.query;
 
       console.log('🔍 VNPay callback received:', req.query);
+
+      // Validate required parameters
+      if (!vnp_OrderInfo || !vnp_ResponseCode || !vnp_TxnRef) {
+        console.error('❌ Missing required VNPay parameters');
+        const frontendBaseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+        const frontendUrl = `${frontendBaseUrl}/orders?status=failed&message=${encodeURIComponent('Thiếu thông tin thanh toán')}&error=missing_params`;
+        return res.redirect(frontendUrl);
+      }
 
       const SUCCESS_CODES = ["00"];
       const FAILED_VNPAY_CODES = [
