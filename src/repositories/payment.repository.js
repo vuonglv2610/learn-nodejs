@@ -336,17 +336,7 @@ module.exports = {
         }
       }
 
-      // 7. Commit transaction (không xóa giỏ hàng ở đây, sẽ xóa khi thanh toán thành công)
-      await transaction.commit();
-
-    } catch (error) {
-      await transaction.rollback();
-      console.error('Error creating payment from cart:', error);
-      return result(null);
-    }
-
-    // Lấy thông tin thanh toán đã tạo kèm thông tin liên quan (sau khi commit)
-    try {
+      // 7. Lấy thông tin thanh toán đã tạo TRƯỚC KHI commit để đảm bảo không có lỗi
       const createdPayment = await PaymentModel.findOne({
         where: { id: payment.id },
         include: [
@@ -379,8 +369,47 @@ module.exports = {
             attributes: ['id', 'code', 'discount_percent', 'start_date', 'end_date'],
             required: false
           }
-        ]
+        ],
+        transaction // Sử dụng transaction để đảm bảo consistency
       });
+
+      if (!createdPayment) {
+        await transaction.rollback();
+        return result({ error: 'Không thể tạo thanh toán. Vui lòng thử lại.' });
+      }
+
+      // 8. Commit transaction CHỈ KHI mọi thứ đều OK
+      await transaction.commit();
+      console.log('✅ Transaction committed successfully');
+
+    } catch (error) {
+      await transaction.rollback();
+      console.error('Error creating payment from cart:', error);
+      return result({ error: 'Lỗi khi tạo thanh toán. Vui lòng thử lại.' });
+    }
+
+    // 9. Gửi email xác nhận đơn hàng (sau khi commit thành công)
+    try {
+      const orderItems = createdPayment.order.orderDetails.map(detail => ({
+        productName: detail.product.name,
+        quantity: detail.quantity,
+        unitPrice: detail.unit_price,
+        totalPrice: detail.total_price
+      }));
+
+      await sendOrderConfirmationEmail(createdPayment.customer.email, {
+        customerName: createdPayment.customer.name,
+        orderId: createdPayment.order.id,
+        orderDate: createdPayment.order.order_date,
+        totalAmount: createdPayment.finalAmount,
+        items: orderItems
+      });
+
+      console.log('✅ Order confirmation email sent successfully');
+    } catch (emailError) {
+      console.error('❌ Error sending order confirmation email:', emailError);
+      // Không throw error vì đơn hàng đã được tạo thành công
+    }
 
       // Gửi email xác nhận đơn hàng
       try {
@@ -405,19 +434,11 @@ module.exports = {
         // Không throw error để không ảnh hưởng đến flow chính
       }
 
-      // Trả về VNPay URL để redirect user đến trang thanh toán
-      result({
-        payment: createdPayment,
-        vnpayUrl: vnpayResponse
-      });
-    } catch (error) {
-      console.error('Error fetching created payment:', error);
-      // Nếu lỗi khi lấy thông tin payment, vẫn trả về response cơ bản
-      result({
-        payment: { id: payment.id },
-        vnpayUrl: vnpayResponse
-      });
-    }
+    // 10. Trả về kết quả thành công
+    result({
+      payment: createdPayment,
+      vnpayUrl: vnpayResponse
+    });
   },
 
   // Cập nhật trạng thái thanh toán từ VNPay callback
