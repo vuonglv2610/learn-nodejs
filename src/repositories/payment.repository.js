@@ -119,6 +119,7 @@ module.exports = {
     const transaction = await sequelize.transaction();
     let payment; // Khai báo payment ở scope rộng hơn
     let vnpayResponse; // Khai báo vnpayResponse ở scope rộng hơn
+    let createdPayment; // Khai báo createdPayment ở scope rộng hơn
 
     try {
       const { customerId, paymentMethod, voucherId, description } = req.body;
@@ -337,7 +338,7 @@ module.exports = {
       }
 
       // 7. Lấy thông tin thanh toán đã tạo TRƯỚC KHI commit để đảm bảo không có lỗi
-      const createdPayment = await PaymentModel.findOne({
+      createdPayment = await PaymentModel.findOne({
         where: { id: payment.id },
         include: [
           {
@@ -804,6 +805,88 @@ module.exports = {
       result(statistics);
     } catch (error) {
       console.error('Error getting payment statistics:', error);
+      result(null);
+    }
+  },
+
+  // Lấy thống kê doanh thu theo tháng (với fake data)
+  getMonthlyRevenue: async (req, res, result) => {
+    try {
+      const { year } = req.query;
+      const currentYear = year ? parseInt(year) : new Date().getFullYear();
+
+      // Tạo fake data doanh thu theo tháng
+      const monthlyRevenue = [];
+      const monthNames = [
+        'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
+        'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'
+      ];
+
+      // Tạo dữ liệu fake cho 12 tháng
+      for (let month = 1; month <= 12; month++) {
+        // Tạo doanh thu ngẫu nhiên từ 50M - 500M VND
+        const baseRevenue = 50000000 + Math.random() * 450000000;
+
+        // Thêm xu hướng tăng trưởng theo mùa
+        let seasonalMultiplier = 1;
+        if (month >= 10 && month <= 12) { // Q4 - mùa mua sắm
+          seasonalMultiplier = 1.3;
+        } else if (month >= 6 && month <= 8) { // Hè
+          seasonalMultiplier = 1.1;
+        } else if (month >= 1 && month <= 2) { // Tết
+          seasonalMultiplier = 1.2;
+        }
+
+        const revenue = Math.round(baseRevenue * seasonalMultiplier);
+
+        // Tạo số đơn hàng tương ứng (giá trung bình ~2M/đơn)
+        const orders = Math.round(revenue / 2000000 + Math.random() * 50);
+
+        monthlyRevenue.push({
+          month: month,
+          monthName: monthNames[month - 1],
+          year: currentYear,
+          revenue: revenue,
+          orders: orders,
+          averageOrderValue: Math.round(revenue / orders),
+          // Thêm tỷ lệ tăng trưởng so với tháng trước
+          growthRate: month === 1 ? 0 : Math.round((Math.random() - 0.3) * 30 * 100) / 100 // -30% đến +30%
+        });
+      }
+
+      // Tính tổng doanh thu năm
+      const totalYearRevenue = monthlyRevenue.reduce((sum, month) => sum + month.revenue, 0);
+      const totalYearOrders = monthlyRevenue.reduce((sum, month) => sum + month.orders, 0);
+
+      // Tạo so sánh với năm trước (fake data)
+      const lastYearRevenue = Math.round(totalYearRevenue * (0.8 + Math.random() * 0.4)); // 80% - 120% của năm nay
+      const yearGrowthRate = Math.round(((totalYearRevenue - lastYearRevenue) / lastYearRevenue) * 10000) / 100;
+
+      const statistics = {
+        year: currentYear,
+        monthlyData: monthlyRevenue,
+        yearSummary: {
+          totalRevenue: totalYearRevenue,
+          totalOrders: totalYearOrders,
+          averageMonthlyRevenue: Math.round(totalYearRevenue / 12),
+          averageOrderValue: Math.round(totalYearRevenue / totalYearOrders),
+          lastYearRevenue: lastYearRevenue,
+          yearGrowthRate: yearGrowthRate
+        },
+        topMonths: monthlyRevenue
+          .sort((a, b) => b.revenue - a.revenue)
+          .slice(0, 3)
+          .map((month, index) => ({
+            rank: index + 1,
+            month: month.monthName,
+            revenue: month.revenue,
+            orders: month.orders
+          }))
+      };
+
+      result(statistics);
+    } catch (error) {
+      console.error('Error getting monthly revenue statistics:', error);
       result(null);
     }
   }

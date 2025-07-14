@@ -12,5 +12,7 @@ router.get('/:id', authMiddleware, PaymentController.getOne); // Customer xem pa
 
 // Admin routes - chỉ admin
 router.get('/', authMiddleware, requireAdmin, PaymentController.getList); // Admin xem tất cả payments
+router.get('/statistics/general', authMiddleware, requireAdmin, PaymentController.getStatistics); // Thống kê chung
+router.get('/statistics/monthly-revenue', authMiddleware, requireAdmin, PaymentController.getMonthlyRevenue); // Doanh thu theo tháng
 
 module.exports = router;

@@ -110,6 +110,16 @@ module.exports = {
     });
   },
 
+  // Lấy thống kê doanh thu theo tháng
+  getMonthlyRevenue: (req, res) => {
+    PaymentRepository.getMonthlyRevenue(req, res, (data) => {
+      if (!data) {
+        return Response.fail(req, res, 500, 'Lỗi khi lấy thống kê doanh thu theo tháng');
+      }
+      return Response.success(req, res, 200, 'Lấy thống kê doanh thu theo tháng thành công', data);
+    });
+  },
+
   // lấy thông tin từ vnpay trả về status, amount ...
   checkVnPay: async (req, res) => {
     try {
