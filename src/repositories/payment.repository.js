@@ -266,6 +266,31 @@ module.exports = {
       await OrderDetailModel.bulkCreate(orderDetailsData, { transaction });
       console.log(`✅ Đã tạo ${orderDetailsData.length} order details cho order ${order.id}`);
 
+      // Giảm số lượng sản phẩm (xóa mềm serial)
+      for (const item of cartItems) {
+        // Lấy số lượng serial cần đánh dấu đã bán (lấy những serial cũ nhất)
+        const serialsToMark = await SerialModel.findAll({
+          where: {
+            productId: item.product_id,
+            deletedAt: null
+          },
+          limit: item.quantity,
+          order: [['createdAt', 'ASC']] // Lấy những serial cũ nhất
+        });
+        
+        if (serialsToMark.length < item.quantity) {
+          await transaction.rollback();
+          return result({ error: `Sản phẩm "${item.product.name}" không đủ số lượng trong kho (yêu cầu: ${item.quantity}, hiện có: ${serialsToMark.length})` });
+        }
+        
+        // Xóa mềm các serial này (đánh dấu đã bán)
+        for (const serial of serialsToMark) {
+          await serial.destroy({ transaction });
+        }
+        
+        console.log(`✅ Đã đánh dấu ${serialsToMark.length} serial đã bán cho sản phẩm ${item.product.name}`);
+      }
+
       // 5. Tạo thanh toán trước để có paymentId
       payment = await PaymentModel.create({
         id: uuidv4(),
@@ -383,63 +408,63 @@ module.exports = {
       await transaction.commit();
       console.log('✅ Transaction committed successfully');
 
-    } catch (error) {
-      await transaction.rollback();
-      console.error('Error creating payment from cart:', error);
-      return result({ error: 'Lỗi khi tạo thanh toán. Vui lòng thử lại.' });
-    }
-
-    // 9. Gửi email xác nhận đơn hàng (sau khi commit thành công)
-    try {
-      const orderItems = createdPayment.order.orderDetails.map(detail => ({
-        productName: detail.product.name,
-        quantity: detail.quantity,
-        unitPrice: detail.unit_price,
-        totalPrice: detail.total_price
-      }));
-
-      await sendOrderConfirmationEmail(createdPayment.customer.email, {
-        customerName: createdPayment.customer.name,
-        orderId: createdPayment.order.id,
-        orderDate: createdPayment.order.order_date,
-        totalAmount: createdPayment.finalAmount,
-        items: orderItems
-      });
-
-      console.log('✅ Order confirmation email sent successfully');
-    } catch (emailError) {
-      console.error('❌ Error sending order confirmation email:', emailError);
-      // Không throw error vì đơn hàng đã được tạo thành công
-    }
-
-      // Gửi email xác nhận đơn hàng
+      // Xóa giỏ hàng sau khi tạo đơn hàng thành công (bất kể phương thức thanh toán)
       try {
-        const orderItems = createdPayment.order.orderDetails.map(detail => ({
-          productName: detail.product.name,
-          quantity: detail.quantity,
-          unitPrice: detail.unit_price,
-          totalPrice: detail.total_price
-        }));
-
-        await sendOrderConfirmationEmail(createdPayment.customer.email, {
-          customerName: createdPayment.customer.name,
-          orderId: createdPayment.order.id,
-          orderDate: createdPayment.order.order_date,
-          totalAmount: createdPayment.finalAmount,
-          items: orderItems
+        await ShoppingCartModel.destroy({
+          where: {
+            customer_id: customerId
+          }
         });
-
-        console.log('✅ Order confirmation email sent successfully');
-      } catch (emailError) {
-        console.error('❌ Error sending order confirmation email:', emailError);
+        console.log('✅ Shopping cart cleared after successful order creation');
+      } catch (cartError) {
+        console.error('❌ Error clearing shopping cart:', cartError);
         // Không throw error để không ảnh hưởng đến flow chính
       }
 
-    // 10. Trả về kết quả thành công
-    result({
-      payment: createdPayment,
-      vnpayUrl: vnpayResponse
-    });
+      // 9. Lấy thông tin payment đã tạo với các thông tin liên quan
+      createdPayment = await PaymentModel.findOne({
+        where: { id: payment.id },
+        include: [
+          {
+            model: OrderModel,
+            as: 'order',
+            include: [
+              {
+                model: OrderDetailModel,
+                as: 'orderDetails',
+                include: [
+                  {
+                    model: ProductModel,
+                    as: 'product',
+                    attributes: ['id', 'name', 'price', 'sku']
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            model: CustomerModel,
+            as: 'customer',
+            attributes: ['id', 'name', 'email', 'phone']
+          }
+        ]
+      });
+
+      // 10. Trả về kết quả thành công
+      result({
+        payment: createdPayment,
+        vnpayUrl: vnpayResponse
+      });
+      
+      // Gửi email xác nhận bất đồng bộ (sau khi response đã được gửi)
+      sendEmailsAfterPaymentCreation(createdPayment).catch(err => {
+        console.error('❌ Lỗi trong quá trình gửi email sau thanh toán:', err);
+      });
+    } catch (error) {
+      await transaction.rollback();
+      console.error('Lỗi khi tạo thanh toán từ giỏ hàng:', error);
+      return result({ error: 'Lỗi khi tạo thanh toán. Vui lòng thử lại.' });
+    }
   },
 
   // Cập nhật trạng thái thanh toán từ VNPay callback
@@ -675,6 +700,35 @@ module.exports = {
         { where: { id: paymentId }, transaction }
       );
       
+      // Lấy thông tin chi tiết đơn hàng
+      const orderDetails = await OrderDetailModel.findAll({
+        where: { orderId: payment.orderId },
+        transaction
+      });
+
+      // Khôi phục lại các serial đã xóa mềm (đánh dấu chưa bán)
+      for (const detail of orderDetails) {
+        // Tìm các serial đã xóa mềm gần đây nhất của sản phẩm này
+        const deletedSerials = await SerialModel.findAll({
+          where: {
+            productId: detail.productId
+          },
+          paranoid: false, // Quan trọng: cho phép tìm cả record đã xóa mềm
+          limit: detail.quantity,
+          order: [['deletedAt', 'DESC']] // Lấy những serial bị xóa gần đây nhất
+        });
+        
+        // Khôi phục lại các serial này
+        for (const serial of deletedSerials) {
+          await serial.restore({ transaction });
+        }
+        
+        console.log(`✅ Đã khôi phục ${deletedSerials.length} serial cho sản phẩm ID: ${detail.productId}`);
+      }
+
+      // Kiểm tra xem transaction có được commit không
+      console.log('🔄 About to commit transaction...');
+
       // Cập nhật trạng thái đơn hàng
       await OrderModel.update(
         { status: 'cancelled' },
@@ -891,3 +945,29 @@ module.exports = {
     }
   }
 };
+
+// Hàm hỗ trợ để xử lý việc gửi email sau khi tạo thanh toán
+async function sendEmailsAfterPaymentCreation(createdPayment) {
+  try {
+    const orderItems = createdPayment.order.orderDetails.map(detail => ({
+      productName: detail.product.name,
+      quantity: detail.quantity,
+      unitPrice: detail.unit_price,
+      totalPrice: detail.total_price
+    }));
+
+    await sendOrderConfirmationEmail(createdPayment.customer.email, {
+      customerName: createdPayment.customer.name,
+      orderId: createdPayment.order.id,
+      orderDate: createdPayment.order.order_date,
+      totalAmount: createdPayment.finalAmount,
+      items: orderItems
+    });
+
+    console.log('✅ Email xác nhận đơn hàng đã được gửi thành công');
+  } catch (emailError) {
+    console.error('❌ Lỗi khi gửi email xác nhận đơn hàng:', emailError);
+  }
+}
+
+

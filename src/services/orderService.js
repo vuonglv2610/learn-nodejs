@@ -5,6 +5,7 @@ const Customer = require('../models/customer.model');
 const Payment = require('../models/payment.model');
 const sequelize = require('../models/db');
 const { sendOrderStatusEmail } = require('./emailService');
+const SerialModel = require('../models/serial.model');
 
 class OrderService {
   /**
@@ -85,6 +86,29 @@ class OrderService {
       }));
 
       const createdOrderDetails = await OrderDetail.bulkCreate(orderDetailsToCreate, { transaction });
+
+      // Xóa mềm serial (đánh dấu đã bán)
+      for (const item of validatedItems) {
+        // Lấy số lượng serial cần đánh dấu đã bán
+        const serialsToMark = await SerialModel.findAll({
+          where: {
+            productId: item.productId,
+            deletedAt: null
+          },
+          limit: item.quantity,
+          transaction
+        });
+        
+        if (serialsToMark.length < item.quantity) {
+          await transaction.rollback();
+          throw new Error(`Sản phẩm ID: ${item.productId} không đủ số lượng trong kho (yêu cầu: ${item.quantity}, hiện có: ${serialsToMark.length})`);
+        }
+        
+        // Xóa mềm các serial này (đánh dấu đã bán)
+        for (const serial of serialsToMark) {
+          await serial.destroy({ transaction });
+        }
+      }
 
       // Commit transaction
       await transaction.commit();
@@ -279,6 +303,30 @@ class OrderService {
         throw new Error('Order not found');
       }
 
+      // Lấy thông tin chi tiết đơn hàng
+      const orderDetails = await OrderDetail.findAll({
+        where: { orderId: orderId },
+        transaction
+      });
+
+      // Khôi phục lại số lượng sản phẩm cho mỗi sản phẩm trong đơn hàng
+      for (const detail of orderDetails) {
+        // Tìm các serial đã xóa mềm gần đây nhất của sản phẩm này
+        const deletedSerials = await SerialModel.findAll({
+          where: {
+            productId: detail.productId
+          },
+          paranoid: false, // Quan trọng: cho phép tìm cả record đã xóa mềm
+          limit: detail.quantity,
+          order: [['deletedAt', 'DESC']] // Lấy những serial bị xóa gần đây nhất
+        });
+        
+        // Khôi phục lại các serial này
+        for (const serial of deletedSerials) {
+          await serial.restore({ transaction });
+        }
+      }
+
       // Xóa order details trước (soft delete)
       await OrderDetail.destroy({
         where: { orderId: orderId },
@@ -352,3 +400,6 @@ class OrderService {
 }
 
 module.exports = new OrderService();
+
+
+
