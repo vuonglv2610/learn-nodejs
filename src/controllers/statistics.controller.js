@@ -5,7 +5,8 @@ module.exports = {
     // API dashboard tổng quan
     getDashboard: async (req, res) => {
         try {
-            const dashboardData = await statisticsRepository.getDashboardStats();
+            const { startDate, endDate } = req.query;
+            const dashboardData = await statisticsRepository.getDashboardStats(startDate, endDate);
             return success(req, res, dashboardData, 200);
         } catch (error) {
             console.error('Error in getDashboard:', error);
@@ -185,3 +186,4 @@ module.exports = {
         }
     }
 };
+

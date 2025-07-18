@@ -85,7 +85,8 @@ class EmailService {
                     currency: 'VND'
                 }).format(orderData.totalAmount),
                 orderItems: this.generateOrderItemsHTML(orderData.items),
-                trackingUrl: `${process.env.FRONTEND_URL}/orders/${orderData.orderId}`,
+                // trackingUrl: `${process.env.FRONTEND_URL}/orders/${orderData.orderId}`,
+                trackingUrl: `${process.env.FRONTEND_URL}/orders`,
                 currentYear: new Date().getFullYear(),
                 supportEmail: process.env.USER_NODE_MAILER
             };
@@ -124,7 +125,8 @@ class EmailService {
                     style: 'currency',
                     currency: 'VND'
                 }).format(paymentData.amount),
-                orderUrl: `${process.env.FRONTEND_URL}/orders/${paymentData.orderId}`,
+                // orderUrl: `${process.env.FRONTEND_URL}/orders/${paymentData.orderId}`,
+                orderUrl: `${process.env.FRONTEND_URL}/orders`,
                 currentYear: new Date().getFullYear(),
                 supportEmail: process.env.USER_NODE_MAILER
             };
@@ -160,7 +162,8 @@ class EmailService {
                 newStatus: this.getStatusName(statusData.newStatus),
                 statusMessage: this.getStatusMessage(statusData.newStatus),
                 updateDate: new Date().toLocaleDateString('vi-VN'),
-                orderUrl: `${process.env.FRONTEND_URL}/orders/${statusData.orderId}`,
+                // orderUrl: `${process.env.FRONTEND_URL}/orders/${statusData.orderId}`,
+                orderUrl: `${process.env.FRONTEND_URL}/orders`,
                 currentYear: new Date().getFullYear(),
                 supportEmail: process.env.USER_NODE_MAILER
             };

@@ -49,78 +49,93 @@ module.exports = {
     },
 
     // Thống kê tổng quan dashboard
-    getDashboardStats: async () => {
+    getDashboardStats: async (startDate, endDate) => {
         try {
             const today = new Date();
             const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+            
+            // Sử dụng startDate/endDate nếu có, nếu không thì dùng mặc định
+            const queryStartDate = startDate ? new Date(startDate) : startOfToday;
+            const queryEndDate = endDate ? new Date(endDate) : new Date();
+            
             const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
             const startOfYear = new Date(today.getFullYear(), 0, 1);
 
-            // Doanh thu hôm nay
+            // Doanh thu trong khoảng thời gian
+            const periodRevenue = await Payment.sum('amount', {
+                where: {
+                    paymentStatus: 'paid',
+                    createdAt: {
+                        [Op.between]: [queryStartDate, queryEndDate]
+                    }
+                }
+            });
+
+            // Đơn hàng trong khoảng thời gian
+            const periodOrders = await Order.count({
+                where: {
+                    createdAt: {
+                        [Op.between]: [queryStartDate, queryEndDate]
+                    }
+                }
+            });
+
+            // Khách hàng mới trong khoảng thời gian
+            const newCustomersPeriod = await Customer.count({
+                where: {
+                    createdAt: {
+                        [Op.between]: [queryStartDate, queryEndDate]
+                    }
+                }
+            });
+
+            // Giữ nguyên các thống kê cũ
             const todayRevenue = await Payment.sum('amount', {
                 where: {
                     paymentStatus: 'paid',
-                    createdAt: {
-                        [Op.gte]: startOfToday
-                    }
+                    createdAt: { [Op.gte]: startOfToday }
                 }
             });
 
-            // Doanh thu tháng này
             const monthRevenue = await Payment.sum('amount', {
                 where: {
                     paymentStatus: 'paid',
-                    createdAt: {
-                        [Op.gte]: startOfMonth
-                    }
+                    createdAt: { [Op.gte]: startOfMonth }
                 }
             });
 
-            // Doanh thu năm này
             const yearRevenue = await Payment.sum('amount', {
                 where: {
                     paymentStatus: 'paid',
-                    createdAt: {
-                        [Op.gte]: startOfYear
-                    }
+                    createdAt: { [Op.gte]: startOfYear }
                 }
             });
 
-            // Tổng số đơn hàng
             const totalOrders = await Order.count();
-
-            // Đơn hàng hôm nay
             const todayOrders = await Order.count({
-                where: {
-                    createdAt: {
-                        [Op.gte]: startOfToday
-                    }
-                }
+                where: { createdAt: { [Op.gte]: startOfToday } }
             });
 
-            // Tổng số khách hàng
             const totalCustomers = await Customer.count();
-
-            // Khách hàng mới hôm nay
             const newCustomersToday = await Customer.count({
-                where: {
-                    createdAt: {
-                        [Op.gte]: startOfToday
-                    }
-                }
+                where: { createdAt: { [Op.gte]: startOfToday } }
             });
 
-            // Tổng số sản phẩm
             const totalProducts = await Product.count();
-
-            // Đơn hàng đang chờ xử lý
             const pendingOrders = await Order.count({
-                where: {
-                    status: 'pending'
-                }
+                where: { status: 'pending' }
             });
 
             return {
+                // Thống kê theo khoảng thời gian (nếu có startDate/endDate)
+                period: startDate && endDate ? {
+                    revenue: periodRevenue || 0,
+                    orders: periodOrders,
+                    newCustomers: newCustomersPeriod,
+                    startDate,
+                    endDate
+                } : null,
+                // Thống kê cũ (giữ nguyên để không break frontend)
                 revenue: {
                     today: todayRevenue || 0,
                     month: monthRevenue || 0,
@@ -386,3 +401,4 @@ module.exports = {
         }
     }
 };
+
