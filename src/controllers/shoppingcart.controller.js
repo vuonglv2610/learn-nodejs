@@ -33,9 +33,15 @@ module.exports = {
     create: (req, res) => {
         ShoppingCartRepository.create(req, res, (result) => {
             if (!result) {
-                return Response.fail(req, res);
+                return Response.fail(req, res, 500, 'Lỗi khi thêm sản phẩm vào giỏ hàng');
             }
-            return Response.success(req, res, result);
+            
+            // Kiểm tra nếu có lỗi từ repository
+            if (result.error) {
+                return Response.fail(req, res, 400, result.error);
+            }
+            
+            return Response.success(req, res, result, 201, 'Thêm sản phẩm vào giỏ hàng thành công');
         });
     },
 

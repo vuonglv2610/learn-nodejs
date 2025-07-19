@@ -116,6 +116,15 @@ module.exports = {
                 return result(null);
             }
             
+            // Kiểm tra số lượng sản phẩm có sẵn
+            const SerialModel = require('../models/serial.model');
+            const availableQuantity = await SerialModel.count({
+                where: {
+                    productId: req.body.product_id,
+                    deletedAt: null
+                }
+            });
+            
             // Kiểm tra xem sản phẩm đã có trong giỏ hàng của khách hàng chưa
             const existingCartItem = await ShoppingCart.findOne({
                 where: {
@@ -126,10 +135,17 @@ module.exports = {
             });
             
             let cart;
+            const requestedQuantity = parseInt(req.body.quantity, 10);
             
             if (existingCartItem) {
-                // Nếu sản phẩm đã có trong giỏ hàng, tăng số lượng lên
-                const newQuantity = existingCartItem.quantity + parseInt(req.body.quantity, 10);
+                // Nếu sản phẩm đã có trong giỏ hàng, tính tổng số lượng mới
+                const newQuantity = existingCartItem.quantity + requestedQuantity;
+                
+                // Kiểm tra số lượng không vượt quá số lượng có sẵn
+                if (newQuantity > availableQuantity) {
+                    console.log(`Không đủ hàng: yêu cầu ${newQuantity}, có sẵn ${availableQuantity}`);
+                    return result({ error: `Không đủ hàng trong kho. Số lượng có sẵn: ${availableQuantity}, số lượng trong giỏ: ${existingCartItem.quantity}` });
+                }
                 
                 await ShoppingCart.update(
                     { quantity: newQuantity },
@@ -143,7 +159,13 @@ module.exports = {
                 // Lấy thông tin giỏ hàng sau khi cập nhật
                 cart = await ShoppingCart.findByPk(existingCartItem.id);
             } else {
-                // Nếu sản phẩm chưa có trong giỏ hàng, tạo mới
+                // Nếu sản phẩm chưa có trong giỏ hàng, kiểm tra số lượng yêu cầu
+                if (requestedQuantity > availableQuantity) {
+                    console.log(`Không đủ hàng: yêu cầu ${requestedQuantity}, có sẵn ${availableQuantity}`);
+                    return result({ error: `Không đủ hàng trong kho. Số lượng có sẵn: ${availableQuantity}` });
+                }
+                
+                // Tạo mới
                 cart = await ShoppingCart.create(req.body);
             }
             
